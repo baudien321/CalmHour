@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Clock, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import AuthButtonClient from "./auth-button-client"
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -27,9 +28,7 @@ export function Navbar() {
           <Link href="#testimonials" className="text-sm font-medium hover:text-purple-600 transition-colors">
             Testimonials
           </Link>
-          <Button asChild>
-            <Link href="#waitlist">Join Waitlist</Link>
-          </Button>
+          <AuthButtonClient />
         </nav>
 
         <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -65,11 +64,9 @@ export function Navbar() {
             >
               Testimonials
             </Link>
-            <Button asChild>
-              <Link href="#waitlist" onClick={() => setIsMenuOpen(false)}>
-                Join Waitlist
-              </Link>
-            </Button>
+            <div className="mt-2">
+                <AuthButtonClient />
+            </div>
           </div>
         </div>
       </div>
