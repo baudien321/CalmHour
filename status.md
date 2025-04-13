@@ -17,7 +17,17 @@
     *   [x] **Backend (API Route):** Create `/api/auth/google/calendar/connect` route.
     *   [x] **Backend (API Route):** Create `/api/auth/google/calendar/callback` route.
     *   [x] **Frontend:** Update UI to show "Connected" status.
-*   [Pending] **Step 5: Core Calendar Analysis & Blocking**
+*   [In Progress] **Step 5: Core Calendar Analysis & Blocking**
+    *   [x] Create a server action or API route (e.g., `/api/calendar/find-and-block`).
+    *   [In Progress] This function will:
+        *   [x] Retrieve the user's valid Google Calendar tokens from the `google_tokens` table.
+        *   [x] Use the Google API client library (e.g., `googleapis`)
+        *   [ ] Fetch free/busy info for the primary calendar for the next 7 days.
+        *   [ ] Implement *basic* logic to find 3 suitable 1-hour slots during typical working hours (e.g., 9am-5pm Mon-Fri).
+        *   [ ] Use the Google API client library to create 3 "Focus Block (CalmHour)" events.
+        *   [ ] Include error handling for API calls and token refresh if needed.
+    *   [ ] **Trigger:** Add a manual button in the UI for the MVP that calls this server action/API route.
+    *   [ ] **Feedback:** Use `sonner` toasts to provide feedback (e.g., "Blocks created successfully!", "Failed to connect to Calendar", "Could not find 3 slots").
 *   [In Progress] **Step 6: Minimal Dashboard UI**
     *   [x] Create protected route `/dashboard`.
     *   [x] Display user email.

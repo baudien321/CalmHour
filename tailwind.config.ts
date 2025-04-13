@@ -2,13 +2,10 @@ import type { Config } from "tailwindcss"
 import plugin from "tailwindcss/plugin"
 
 const config = {
-  darkMode: ["class"],
+  darkMode: "class",
   content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-    "*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   prefix: "",
   theme: {
@@ -77,43 +74,64 @@ const config = {
             backgroundPosition: "350% 50%, 350% 50%",
           },
         },
+        "gradient-shift": {
+          "0%, 100%": {
+            backgroundPosition: "0% 50%",
+          },
+          "50%": {
+            backgroundPosition: "100% 50%",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         aurora: "aurora 60s linear infinite",
+        "gradient-shift": "gradient-shift 60s ease infinite",
       },
     },
   },
   plugins: [
     require("tailwindcss-animate"),
+    // Comment out the custom plugin
+    /*
     plugin(({ addBase, theme }) => {
       // Define CSS variables for colors
       const colors = theme("colors")
-      const colorVariables = {}
+      // Explicitly type colorVariables and initialize
+      const colorVariables: Record<string, string> = {}
 
-      // Flatten the nested color object and create CSS variables
-      Object.entries(colors).forEach(([colorName, colorValue]) => {
-        if (typeof colorValue === "object") {
-          Object.entries(colorValue).forEach(([shade, value]) => {
-            if (shade === "DEFAULT") {
-              colorVariables[`--${colorName}`] = value
-            } else {
-              colorVariables[`--${colorName}-${shade}`] = value
-            }
-          })
-        } else {
-          colorVariables[`--${colorName}`] = colorValue
-        }
-      })
+      // Check if colors is defined before proceeding
+      if (colors) {
+        // Flatten the nested color object and create CSS variables
+        Object.entries(colors).forEach(([colorName, colorValue]) => {
+          if (typeof colorValue === "object" && colorValue !== null) { // Added null check for robustness
+            Object.entries(colorValue).forEach(([shade, value]) => {
+              // Ensure value is a string before assigning
+              if (typeof value === 'string') { 
+                if (shade === "DEFAULT") {
+                  colorVariables[`--${colorName}`] = value
+                } else {
+                  colorVariables[`--${colorName}-${shade}`] = value
+                }
+              }
+            })
+          } else if (typeof colorValue === 'string') { // Handle top-level string colors
+            colorVariables[`--${colorName}`] = colorValue
+          }
+        })
+      }
 
       // Add the variables to the :root selector
       addBase({
-        ":root": colorVariables,
-        // Add transparent variable which is used in the aurora background
-        "--transparent": "transparent",
+        ":root": {
+          ...colorVariables,
+          // Add transparent variable which is used in the aurora background
+          "--transparent": "transparent",
+        }
       })
     }),
+    */
   ],
 } satisfies Config
 

@@ -2,15 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
+/* Restore CSS variables and base body style */
 
 @layer base {
   :root {
@@ -33,12 +25,13 @@ body {
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
     --ring: 0 0% 3.9%;
+    --radius: 0.5rem;
+    /* Add back chart/sidebar vars if they were present before, or keep minimal */
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -47,6 +40,20 @@ body {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Add variables needed by AuroraBackground */
+    --white: 0 0% 100%;
+    --black: 0 0% 0%;
+    --blue-300: 217 91% 60%;
+    --blue-400: 214 90% 56%;
+    --blue-500: 221 83% 53%;
+    --indigo-300: 231 91% 60%;
+    --violet-200: 250 89% 70%;
+    --transparent: transparent;
+
+    /* Add gradient variables for AuroraBackground - Rename to match original */
+    --white-gradient: repeating-linear-gradient(100deg,var(--white)_0%,var(--white)_7%,var(--transparent)_10%,var(--transparent)_12%,var(--white)_16%);
+    --aurora: repeating-linear-gradient(100deg,var(--blue-500)_10%,var(--indigo-300)_15%,var(--blue-300)_20%,var(--violet-200)_25%,var(--blue-400)_30%); /* Renamed */
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -68,6 +75,8 @@ body {
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
+    --radius: 0.5rem;
+    /* Add back chart/sidebar vars if they were present before, or keep minimal */
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -81,9 +90,25 @@ body {
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Add dark variables needed by AuroraBackground */
+    /* Using same names, but values appropriate for dark mode */
+    --white: 0 0% 100%; /* Keep white as white */
+    --black: 0 0% 0%;   /* Keep black as black */
+    /* Adjusting blues/indigos/violets for dark mode - you might tweak these */
+    --blue-300: 217 91% 65%;
+    --blue-400: 214 90% 61%;
+    --blue-500: 221 83% 58%;
+    --indigo-300: 231 91% 65%;
+    --violet-200: 250 89% 75%;
+
+    /* Add gradient variables for AuroraBackground (Dark) - Rename to match original */
+    --dark-gradient: repeating-linear-gradient(100deg,var(--black)_0%,var(--black)_7%,var(--transparent)_10%,var(--transparent)_12%,var(--black)_16%);
+    --aurora: repeating-linear-gradient(100deg,var(--blue-500)_10%,var(--indigo-300)_15%,var(--blue-300)_20%,var(--violet-200)_25%,var(--blue-400)_30%); /* Renamed */
   }
 
   body {
-    /* @apply bg-background text-foreground; */
+    /* Restore base body styles */ 
+    @apply bg-background text-foreground; 
   }
 }

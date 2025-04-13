@@ -1,14 +1,14 @@
-Error: ./app/globals.css.webpack[javascript/auto]!=!./node_modules/.pnpm/next@15.2.4_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!./node_modules/.pnpm/next@15.2.4_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./app/globals.css
-Error: Cannot apply unknown utility class: bg-background
-    at BuildError (webpack-internal:///(pages-dir-browser)/./node_modules/.pnpm/next@15.2.4_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/react-dev-overlay/ui/container/build-error.js:43:41)
-    at react-stack-bottom-frame (webpack-internal:///(pages-dir-browser)/./node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23864:20)
-    at renderWithHooks (webpack-internal:///(pages-dir-browser)/./node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:5530:22)
-    at updateFunctionComponent (webpack-internal:///(pages-dir-browser)/./node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:8898:19)
-    at beginWork (webpack-internal:///(pages-dir-browser)/./node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:10523:18)
-    at runWithFiberInDEV (webpack-internal:///(pages-dir-browser)/./node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1520:30)
-    at performUnitOfWork (webpack-internal:///(pages-dir-browser)/./node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15133:22)
-    at workLoopSync (webpack-internal:///(pages-dir-browser)/./node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14957:41)
-    at renderRootSync (webpack-internal:///(pages-dir-browser)/./node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14937:11)
-    at performWorkOnRoot (webpack-internal:///(pages-dir-browser)/./node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14420:13)
-    at performWorkOnRootViaSchedulerTask (webpack-internal:///(pages-dir-browser)/./node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:16217:7)
-    at MessagePort.performWorkUntilDeadline (webpack-internal:///(pages-dir-browser)/./node_modules/.pnpm/scheduler@0.26.0/node_modules/scheduler/cjs/scheduler.development.js:45:48)
+Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `Home`.
+
+app\page.tsx (26:11) @ Home
+
+
+  24 |         <AuroraBackground className="h-[80vh] md:h-[70vh]">
+  25 |           {/* Content from bugs.md demo */}
+> 26 |           <motion.div
+     |           ^
+  27 |             initial={{ opacity: 0.0, y: 40 }}
+  28 |             whileInView={{ opacity: 1, y: 0 }}
+  29 |             transition={{

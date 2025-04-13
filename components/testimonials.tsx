@@ -1,117 +1,168 @@
 "use client"
 
-import { motion } from "framer-motion"
-import Image from "next/image"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+
+const testimonials = [
+  {
+    name: "Sarah Chen",
+    title: "Product Manager",
+    company: "Innovatech",
+    quote:
+      "CalmHour has been a game-changer. I used to constantly fight for focus time, but now it's automatically protected in my calendar. My productivity has soared.",
+    avatar: "/placeholder-user.jpg", // Replace with actual path or remove
+    fallback: "SC",
+  },
+  {
+    name: "David Lee",
+    title: "Software Engineer",
+    company: "CodeCrafters",
+    quote:
+      "As an engineer, uninterrupted deep work is crucial. CalmHour intelligently finds those pockets and blocks them off. It's simple, effective, and brilliant.",
+    avatar: "/placeholder-user.jpg", // Replace with actual path or remove
+    fallback: "DL",
+  },
+  {
+    name: "Maria Garcia",
+    title: "Freelance Designer",
+    company: "Self-employed",
+    quote:
+      "Juggling multiple clients means my schedule is chaotic. CalmHour brings order by automatically scheduling my essential design time. Highly recommended!",
+    avatar: "/placeholder-user.jpg", // Replace with actual path or remove
+    fallback: "MG",
+  },
+]
 
 export function Testimonials() {
   return (
-    <section id="testimonials" className="w-full py-12 md:py-24">
+    <section id="testimonials" className="w-full py-12 md:py-24 lg:py-32 bg-white dark:bg-zinc-900">
       <div className="container px-4 md:px-6">
-        <motion.div
-          className="flex flex-col items-center gap-4 text-center mb-10"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-purple-600">
-            What Our Early Users Say
+        <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
+          <div className="inline-block rounded-lg bg-purple-100 px-3 py-1 text-sm dark:bg-purple-800/30 text-purple-700 dark:text-purple-300">
+            Testimonials
+          </div>
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-zinc-900 dark:text-zinc-100">
+            Loved by Professionals
           </h2>
-          <p className="max-w-[700px] text-zinc-700 dark:text-zinc-300 md:text-xl">
-            Hear from professionals who've transformed their workday with CalmHour.
+          <p className="max-w-[900px] text-zinc-600 dark:text-zinc-400 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            Hear what busy professionals are saying about how CalmHour transformed
+            their productivity and focus.
           </p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-          <motion.div
-            className="flex flex-col gap-4 p-6 bg-white/50 dark:bg-zinc-800/50 backdrop-blur-sm rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <div className="flex items-center gap-4">
-              <div className="relative w-12 h-12 rounded-full overflow-hidden">
-                <Image src="/placeholder.svg?height=100&width=100" alt="User avatar" fill className="object-cover" />
-              </div>
-              <div>
-                <h4 className="font-bold">Sarah J.</h4>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">Product Manager</p>
-              </div>
-            </div>
-            <p className="text-zinc-700 dark:text-zinc-300 italic">
-              "CalmHour has transformed my workday. I now have dedicated blocks for deep work, and my team respects
-              these times. My productivity has increased by at least 30%."
-            </p>
-            <div className="flex">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <svg key={star} className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              ))}
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="flex flex-col gap-4 p-6 bg-white/50 dark:bg-zinc-800/50 backdrop-blur-sm rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <div className="flex items-center gap-4">
-              <div className="relative w-12 h-12 rounded-full overflow-hidden">
-                <Image src="/placeholder.svg?height=100&width=100" alt="User avatar" fill className="object-cover" />
-              </div>
-              <div>
-                <h4 className="font-bold">Michael T.</h4>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">Software Engineer</p>
-              </div>
-            </div>
-            <p className="text-zinc-700 dark:text-zinc-300 italic">
-              "As a developer, context switching kills my productivity. CalmHour has given me 3-hour blocks of
-              uninterrupted coding time, and my output has never been better."
-            </p>
-            <div className="flex">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <svg key={star} className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              ))}
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="flex flex-col gap-4 p-6 bg-white/50 dark:bg-zinc-800/50 backdrop-blur-sm rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <div className="flex items-center gap-4">
-              <div className="relative w-12 h-12 rounded-full overflow-hidden">
-                <Image src="/placeholder.svg?height=100&width=100" alt="User avatar" fill className="object-cover" />
-              </div>
-              <div>
-                <h4 className="font-bold">Elena R.</h4>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">Marketing Director</p>
-              </div>
-            </div>
-            <p className="text-zinc-700 dark:text-zinc-300 italic">
-              "CalmHour has helped me balance strategic thinking with team availability. I'm less stressed and more
-              creative now that I have protected time for deep work."
-            </p>
-            <div className="flex">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <svg key={star} className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              ))}
-            </div>
-          </motion.div>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {testimonials.map((testimonial) => (
+            <Card
+              key={testimonial.name}
+              className="bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow duration-300"
+            >
+              <CardContent className="p-6 space-y-4">
+                <blockquote className="text-lg font-semibold leading-snug text-zinc-900 dark:text-zinc-100">
+                  “{testimonial.quote}”
+                </blockquote>
+                <div className="flex items-center gap-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                  <Avatar>
+                    <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
+                    <AvatarFallback>{testimonial.fallback}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                      {testimonial.name}
+                    </p>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                      {testimonial.title}, {testimonial.company}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </section>
   )
 }
+
+// // Keeping original v0 code commented for reference if needed
+// import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+// import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+// import { motion } from "framer-motion"
+
+// const testimonialsData = [
+//   {
+//     name: "Sarah L.",
+//     title: "Product Manager",
+//     quote: "CalmHour has been a game-changer. I used to constantly fight for focus time, but now it's automatically protected in my calendar. My productivity has soared.",
+//     avatar: "/avatars/01.png",
+//     fallback: "SL",
+//   },
+//   {
+//     name: "David C.",
+//     title: "Software Engineer",
+//     quote: "As an engineer, uninterrupted deep work is crucial. CalmHour intelligently finds those pockets and blocks them off. It's simple, effective, and brilliant.",
+//     avatar: "/avatars/02.png",
+//     fallback: "DC",
+//   },
+//   {
+//     name: "Maria G.",
+//     title: "Freelance Designer",
+//     quote: "Juggling multiple clients means my schedule is chaotic. CalmHour brings order by automatically scheduling my essential design time. Highly recommended!",
+//     avatar: "/avatars/03.png",
+//     fallback: "MG",
+//   },
+// ]
+
+// export function Testimonials() {
+//   return (
+//     <section id="testimonials" className="w-full py-12 md:py-24 lg:py-32 bg-zinc-100 dark:bg-zinc-800/40">
+//       <div className="container px-4 md:px-6">
+//         <motion.div
+//           className="flex flex-col items-center justify-center space-y-4 text-center mb-12"
+//           initial={{ opacity: 0, y: 20 }}
+//           whileInView={{ opacity: 1, y: 0 }}
+//           viewport={{ once: true }}
+//           transition={{ duration: 0.5 }}
+//         >
+//           <div className="inline-block rounded-lg bg-purple-100 px-3 py-1 text-sm dark:bg-purple-800/30 text-purple-700 dark:text-purple-300">
+//             Testimonials
+//           </div>
+//           <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-zinc-900 dark:text-zinc-100">
+//             Loved by Professionals
+//           </h2>
+//           <p className="max-w-[900px] text-zinc-600 dark:text-zinc-400 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+//             Hear what busy professionals are saying about how CalmHour transformed their productivity and focus.
+//           </p>
+//         </motion.div>
+//         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+//           {testimonialsData.map((testimonial, index) => (
+//             <motion.div
+//               key={testimonial.name}
+//               initial={{ opacity: 0, y: 20 }}
+//               whileInView={{ opacity: 1, y: 0 }}
+//               viewport={{ once: true }}
+//               transition={{ duration: 0.5, delay: index * 0.1 }}
+//             >
+//               <Card className="bg-white dark:bg-zinc-900 shadow-lg h-full flex flex-col">
+//                 <CardContent className="p-6 flex flex-col flex-grow">
+//                   <blockquote className="text-lg font-semibold leading-snug text-zinc-800 dark:text-zinc-200 flex-grow">
+//                     “{testimonial.quote}”
+//                   </blockquote>
+//                   <div className="flex items-center gap-4 mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+//                     <Avatar>
+//                       <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
+//                       <AvatarFallback>{testimonial.fallback}</AvatarFallback>
+//                     </Avatar>
+//                     <div>
+//                       <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{testimonial.name}</p>
+//                       <p className="text-sm text-zinc-600 dark:text-zinc-400">{testimonial.title}</p>
+//                     </div>
+//                   </div>
+//                 </CardContent>
+//               </Card>
+//             </motion.div>
+//           ))}
+//         </div>
+//       </div>
+//     </section>
+//   )
+// }
 
