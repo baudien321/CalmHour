@@ -28,3 +28,8 @@ next-env.d.ts
 
 #Cursor-rules
 .cursor
+
+# unnessecary files
+bugs.md
+errors.md
+test.md

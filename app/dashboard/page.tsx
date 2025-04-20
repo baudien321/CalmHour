@@ -1,54 +1,100 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from 'next/navigation';
 import CalendarConnectButton from "@/components/calendar-connect-button";
-
-// We need a client component to handle searchParams for toasts
 import DashboardClientMessages from "./dashboard-client-messages";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Activity, CheckCircle, XCircle } from "lucide-react";
+import { DashboardHeader } from "@/components/dashboard-header";
+import { DashboardActionCardContent } from "@/components/dashboard-action-card-content";
+import { FocusControlsSidebar } from "@/components/focus-controls-sidebar";
+import { CalendarView } from "@/components/calendar-view";
 
 export default async function DashboardPage() {
-  const supabase = createClient();
+  // Await the async createClient function
+  const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Although middleware handles redirection, double-checking here
-  // can be useful, especially if middleware logic changes.
   if (!user) {
-    redirect('/'); // Redirect to homepage if somehow accessed without user
+    redirect('/');
   }
 
-  // Fetch calendar connection status from `google_tokens` table
+  // Fetch calendar connection status
   const { data: tokenData, error: tokenError } = await supabase
     .from('google_tokens')
-    .select('user_id') // Select any column just to check if a row exists
+    .select('user_id') 
     .eq('user_id', user.id)
-    .maybeSingle(); // Use maybeSingle() to return null if no row found
+    .maybeSingle(); 
 
   if (tokenError) {
     console.error("Error fetching google_tokens:", tokenError);
-    // Decide how to handle this - show error, disable button?
-    // For now, assume not connected on error
+    // Handle error appropriately in UI if needed
   }
 
-  const isCalendarConnected = !!tokenData; // True if a row exists for the user
+  const isCalendarConnected = !!tokenData;
 
   return (
-    <main className="container mx-auto py-10 px-4">
-      {/* Client component to handle messages based on searchParams */}
-      <DashboardClientMessages />
+    <div className="flex min-h-screen w-full flex-col">
+      <DashboardHeader />
+      <div className="flex flex-1 flex-col gap-4 p-4 md:flex-row md:gap-8 md:p-8">
+        <main className="flex-1 flex flex-col gap-4 md:gap-8">
+          <DashboardClientMessages />
+          <div className="grid gap-4 md:gap-8 lg:grid-cols-1 xl:grid-cols-3">
+            <Card className="xl:col-span-1">
+              <CardHeader className="pb-4">
+                <CardTitle>Welcome, {user.email?.split('@')[0]}!</CardTitle> 
+                <CardDescription>
+                  Manage your calendar connection and focus time.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium">Calendar Status:</span>
+                  {isCalendarConnected ? (
+                    <Badge variant="success"> <CheckCircle className="mr-1 h-3 w-3" /> Connected</Badge>
+                  ) : (
+                    <Badge variant="destructive"> <XCircle className="mr-1 h-3 w-3" /> Not Connected</Badge>
+                  )}
+                </div>
+                <CalendarConnectButton isConnected={isCalendarConnected} />
+                
+                {!isCalendarConnected && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Connect your Google Calendar to get started.
+                    </p>
+                  )}
+              </CardContent>
+            </Card>
 
-      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-      <p className="mb-4">Welcome, {user.email}!</p>
-      <p className="mb-6">This is your protected dashboard area.</p>
-
-      {/* Add the Calendar Connection Button */}
-      <div className="mt-6 border-t pt-6">
-          <h2 className="text-xl font-semibold mb-3">Calendar Integration</h2>
-          <CalendarConnectButton isConnected={isCalendarConnected} />
-          {/* Optionally display status text */}
-          <p className="text-sm mt-2 text-gray-500">
-              Status: {isCalendarConnected ? 'Connected' : 'Not Connected'}
-          </p>
+            <Card className="xl:col-span-2">
+              <CardHeader>
+                <CardTitle>Find & Block Focus Time</CardTitle>
+                <CardDescription>
+                   Automatically analyze your primary Google Calendar for the next 7 days 
+                   (Mon-Fri, 9am-5pm UTC) and schedule up to 3 available 1-hour focus blocks.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DashboardActionCardContent isCalendarConnected={isCalendarConnected} />
+              </CardContent>
+            </Card>
+          </div>
+          <div className="flex-1">
+            <CalendarView />
+          </div>
+        </main>
+        
+        <aside className="w-full shrink-0 md:w-80 lg:w-96">
+          <FocusControlsSidebar />
+        </aside>
       </div>
-    </main>
+    </div>
   );
 } 

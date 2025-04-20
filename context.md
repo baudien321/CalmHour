@@ -60,19 +60,24 @@ The key is simplicity - don't build recommendation engines, team coordination, o
     *   [ ] Create a server action or API route (e.g., `/api/calendar/find-and-block`).
     *   [ ] This function will:
         *   [ ] Retrieve the user's valid Google Calendar tokens from the `google_tokens` table.
-        *   [ ] Use the Google API client library (e.g., `googleapis`) to fetch free/busy info for the primary calendar for the next 7 days.
-        *   [ ] Implement *basic* logic to find 3 suitable 1-hour slots during typical working hours (e.g., 9am-5pm Mon-Fri).
-        *   [ ] Use the Google API client library to create 3 "Focus Block (CalmHour)" events.
-        *   [ ] Include error handling for API calls and token refresh if needed.
-    *   [ ] **Trigger:** Add a manual button in the UI for the MVP that calls this server action/API route.
-    *   [ ] **Feedback:** Use `sonner` toasts to provide feedback (e.g., "Blocks created successfully!", "Failed to connect to Calendar", "Could not find 3 slots").
+        *   [x] Use the Google API client library (e.g., `googleapis`) to fetch free/busy info for the primary calendar for the next 7 days.
+        *   [x] Implement *basic* logic to find 3 suitable 1-hour slots during typical working hours (e.g., 9am-5pm Mon-Fri).
+        *   [x] Use the Google API client library to create 3 "Focus Block (CalmHour)" events.
+        *   [x] Include error handling for API calls and token refresh if needed.
+    *   [x] **Trigger:** Add a manual button in the UI for the MVP that calls this server action/API route.
+    *   [x] **Feedback:** Use `sonner` toasts to provide feedback (e.g., "Blocks created successfully!", "Failed to connect to Calendar", "Could not find 3 slots").
 
 6.  **Minimal Dashboard UI:**
     *   [x] Create a protected route (e.g., `/dashboard`) using Next.js file-based routing.
     *   [x] Display user email (fetched server-side).
     *   [x] Show Google Calendar connection status and Connect/Refresh button.
-    *   [ ] Include the manual trigger button for the blocking logic.
+    *   [x] Include the manual trigger button for the blocking logic.
     *   [x] Add Logout button.
+
+6.5. **Dashboard Calendar View (Post-MVP Addition):** - NEW
+    *   [x] **Goal:** Display the user's actual Google Calendar events for the current week directly within the dashboard.
+    *   [x] **Backend:** Create an API endpoint structure to fetch event data (summary, start, end) from Google Calendar using stored tokens. (Implemented)
+    *   [x] **Frontend:** Update the dashboard UI (`CalendarWeekView`) to fetch data from the backend endpoint and render the events visually within the grid. (Implemented with basic overlap handling)
 
 7.  **Deployment:**
     *   [ ] Ensure all necessary environment variables (Supabase, Google Cloud) are configured in Vercel project settings.

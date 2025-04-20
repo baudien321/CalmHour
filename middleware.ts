@@ -63,27 +63,25 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Define protected routes (adjust as needed)
-  const protectedRoutes = ['/dashboard'] // Add other routes like /settings etc.
+  const protectedRoutes = ['/dashboard'] 
+  const publicOnlyPaths = ['/login', '/signup'] // Add signup page too
+  const homePath = '/'
 
   // Redirect to login if user is not logged in and trying to access a protected route
   if (!user && protectedRoutes.some(path => request.nextUrl.pathname.startsWith(path))) {
-    // You might want to redirect to a specific login page if you create one
-    // Or just redirect to the home page
     const redirectUrl = request.nextUrl.clone()
-    redirectUrl.pathname = '/' // Redirect to home page
-    // Optional: Add a query param to show a message, e.g.:
-    // redirectUrl.searchParams.set(`redirectedFrom`, request.nextUrl.pathname)
+    redirectUrl.pathname = '/login' // Redirect to login page instead of home
     return NextResponse.redirect(redirectUrl)
   }
 
-  // If user is logged in and tries to access a public-only page (e.g. a dedicated login page),
-  // redirect them to the dashboard (optional).
-  // if (user && request.nextUrl.pathname === '/login') {
-  //   const redirectUrl = request.nextUrl.clone()
-  //   redirectUrl.pathname = '/dashboard'
-  //   return NextResponse.redirect(redirectUrl)
-  // }
+  // If user IS logged in and tries to access a public-only page (login/signup) or the homepage,
+  // redirect them to the dashboard.
+  if (user && (publicOnlyPaths.includes(request.nextUrl.pathname) || request.nextUrl.pathname === homePath)) {
+    const redirectUrl = request.nextUrl.clone()
+    redirectUrl.pathname = '/dashboard'
+    console.log(`[Middleware] Redirecting logged-in user from ${request.nextUrl.pathname} to /dashboard`); // Add log
+    return NextResponse.redirect(redirectUrl)
+  }
 
   return response
 }

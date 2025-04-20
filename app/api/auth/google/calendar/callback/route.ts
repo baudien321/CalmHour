@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   }
 
   // 3. Get Supabase client and check for authenticated user
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
@@ -67,20 +67,50 @@ export async function GET(request: Request) {
 
     const tokens = await tokenResponse.json();
 
+    // --- START DEBUG LOGGING ---
+    console.log("[Callback] Full token response received from Google:", JSON.stringify(tokens));
+    // --- END DEBUG LOGGING ---
+
     if (!tokenResponse.ok) {
       console.error('Failed to exchange Google auth code for tokens:', tokens);
       throw new Error(tokens.error_description || 'Failed to fetch tokens from Google');
     }
 
-    const { access_token, refresh_token, expires_in } = tokens;
+    // Extract necessary fields (including scope for potential logging/validation later)
+    const { access_token, refresh_token, expires_in, scope } = tokens;
+
+    // Log the specific scope received
+    console.log(`[Callback] Granted Scopes: ${scope}`);
 
     if (!access_token) {
         console.error('Missing access_token in Google token response:', tokens);
         throw new Error('Missing access_token from Google');
     }
 
-    // 7. Calculate expiry timestamp (expires_in is in seconds)
-    const expires_at = Math.floor(Date.now() / 1000) + expires_in;
+    // --- START expires_in / expires_at DEBUGGING ---
+    console.log(`[Callback] Received expires_in: ${expires_in} (Type: ${typeof expires_in})`);
+    
+    let calculated_expires_at_timestamp: number | null = null;
+    let expires_at_iso: string | null = null;
+
+    if (typeof expires_in !== 'number' || expires_in <= 0) {
+        console.error(`[Callback] Invalid expires_in value received: ${expires_in}. Cannot calculate expiry.`);
+        // Decide how to handle: throw error, store null, or use a default fallback?
+        // For now, we will allow storing null, but this might cause issues later.
+    } else {
+        // 7. Calculate expiry timestamp (expires_in is in seconds)
+        calculated_expires_at_timestamp = Math.floor(Date.now() / 1000) + expires_in;
+        console.log(`[Callback] Calculated expires_at UNIX timestamp: ${calculated_expires_at_timestamp}`);
+        try {
+            expires_at_iso = new Date(calculated_expires_at_timestamp * 1000).toISOString();
+            console.log(`[Callback] Calculated expires_at ISO string: ${expires_at_iso}`);
+        } catch (dateError) {
+            console.error(`[Callback] Error converting calculated timestamp to ISO string:`, dateError);
+            // Decide how to handle: throw error or store null?
+            expires_at_iso = null; 
+        }
+    }
+    // --- END expires_in / expires_at DEBUGGING ---
 
     // 8. Store tokens securely in the database (upsert handles new or existing)
     const { error: dbError } = await supabase
@@ -88,14 +118,19 @@ export async function GET(request: Request) {
       .upsert({
         user_id: user.id,
         access_token: access_token,
-        refresh_token: refresh_token, // May be null if user previously authorized without offline access
-        expires_at: new Date(expires_at * 1000).toISOString(), // Convert to ISO string for timestamptz
+        refresh_token: refresh_token, 
+        expires_at: expires_at_iso,
+        scopes: scope,
       });
-
+      
+    // --- START DEBUG LOGGING (AFTER UPSERT) ---
     if (dbError) {
-      console.error('Error saving Google tokens to database:', dbError);
+      console.error('[Callback] Error during Supabase upsert:', dbError);
       throw new Error('Could not save calendar credentials.');
+    } else {
+      console.log(`[Callback] Supabase upsert completed successfully for user ${user.id}. expires_at sent: ${expires_at_iso}, scopes sent: ${scope}`);
     }
+    // --- END DEBUG LOGGING (AFTER UPSERT) ---
 
     // 9. Redirect back to dashboard on success
     dashboardUrl.searchParams.set('calendar_connected', 'true');

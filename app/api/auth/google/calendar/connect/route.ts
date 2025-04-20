@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 
 export async function GET(request: Request) {
   // 1. Get Supabase client and check for authenticated user
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 
   // 4. Define required scopes
   const scopes = [
-    'https://www.googleapis.com/auth/calendar.events.readonly',
+    'https://www.googleapis.com/auth/calendar.readonly',
     'https://www.googleapis.com/auth/calendar.events'
   ];
 
