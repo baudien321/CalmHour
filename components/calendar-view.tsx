@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { cn } from "@/lib/utils";
 import {
   format, startOfWeek, endOfWeek, addDays, isToday, getHours, getMinutes,
@@ -35,10 +35,11 @@ interface ProcessedEventLayout {
 }
 
 // Constants for the grid
-const START_HOUR = 8;
-const END_HOUR = 18; // Represents 5 PM end time (display up to 5:30)
+const START_HOUR = 0; // Restore 0
+const END_HOUR = 24; // Restore 24
 const TIME_SLOT_INTERVAL_MINS = 30; // minutes
-const ROW_HEIGHT_REM = 3; // h-12 (3rem) represents 30 minutes
+const ROW_HEIGHT_REM = 3; // h-12 (3rem) represents 30 minutes - NOTE: This is for LABEL spacing, not grid lines!
+const GRID_ROW_HEIGHT_REM = 1.5; // h-6 (1.5rem) is the actual height of a 30-min grid slot
 
 // Helper function to calculate event position and height
 function calculateEventPosition(event: CalendarEvent, dayStartDate: Date): { top: number; height: number } | null {
@@ -86,10 +87,28 @@ function calculateEventPosition(event: CalendarEvent, dayStartDate: Date): { top
 export function CalendarView() {
   const [activeView, setActiveView] = useState<'day' | 'week' | 'month'>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentTimePosition, setCurrentTimePosition] = useState<number | null>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [initialScrollDone, setInitialScrollDone] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [_, setTick] = useState(0);
+
+  const calculateCurrentTimePosition = (): number | null => {
+      const now = new Date();
+      const currentHour = getHours(now);
+      const currentMinute = getMinutes(now);
+
+      if (currentHour >= START_HOUR && currentHour < END_HOUR) {
+        const minutesPastStartHour = (currentHour - START_HOUR) * 60 + currentMinute;
+        const remPerMinute = GRID_ROW_HEIGHT_REM / TIME_SLOT_INTERVAL_MINS;
+        return minutesPastStartHour * remPerMinute;
+      } 
+      return null;
+  };
+  
+  const currentTimePosition = calculateCurrentTimePosition();
 
   // Calculate view interval based on activeView and currentDate
   const viewInterval = useMemo(() => {
@@ -132,65 +151,120 @@ export function CalendarView() {
     return []; 
   }, [currentDate, activeView, viewInterval]);
 
-  // Effect for calculating time indicator
-  useEffect(() => {
-    const calculatePosition = () => {
-      const now = new Date();
-      const currentHour = getHours(now);
-      const currentMinute = getMinutes(now);
+  // --- Refactored Effects --- 
 
-       if (currentHour >= START_HOUR && currentHour < END_HOUR) {
-          const minutesPastStartHour = (currentHour - START_HOUR) * 60 + currentMinute;
-          // Calculate position based on REM height per interval
-          const topPositionRem = (minutesPastStartHour / TIME_SLOT_INTERVAL_MINS) * ROW_HEIGHT_REM;
-          setCurrentTimePosition(topPositionRem);
-       } else {
-         setCurrentTimePosition(null); // Hide indicator outside working hours
-       }
+  // Effect 0: Log mount/unmount
+  useEffect(() => {
+    console.log('[CalendarView Lifecycle] Component Mounted');
+    return () => {
+      console.log('[CalendarView Lifecycle] Component Unmounted');
+    };
+  }, []);
+
+  // Effect 1: Set up and clear interval to trigger re-renders for time updates
+  useEffect(() => {
+    console.log('[Effect 1: Interval Setup] Setting up timer.');
+    intervalRef.current = setInterval(() => {
+       console.log('[Effect 1: Interval Tick] Forcing re-render.');
+      setTick(prev => prev + 1); // Update state to trigger re-render
+    }, 60000); // Update every minute
+
+    return () => {
+      console.log('[Effect 1: Interval Cleanup] Clearing timer.');
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []); // Run only once on mount
+
+  // Effect 2: Perform initial scroll using scrollTop and requestAnimationFrame
+  useEffect(() => {
+    const effectStartTime = Date.now();
+    console.log(`[Effect 2 @ ${effectStartTime}] Initial Scroll Check (using RAF). Position: ${currentTimePosition}, Done: ${initialScrollDone}, Ref Exists: ${!!scrollContainerRef.current}`);
+    
+    let animationFrameId: number | null = null; // Store the frame ID
+
+    if (currentTimePosition !== null && !initialScrollDone && scrollContainerRef.current) {
+        const scrollContainer = scrollContainerRef.current; // Capture ref value
+        // Calculate target scroll position in pixels
+        const scrollTargetRem = Math.max(0, currentTimePosition - 3); 
+        const rootFontSizePx = 16; 
+        const scrollTargetPx = scrollTargetRem * rootFontSizePx;
+        
+        console.log(`[Effect 2 @ ${Date.now()}] Conditions met. Target Px=${scrollTargetPx.toFixed(2)}. Scheduling RAF.`);
+        
+        // Schedule the scroll using requestAnimationFrame
+        animationFrameId = requestAnimationFrame(() => {
+            console.log(`[Effect 2 @ ${Date.now()}] RAF triggered. Attempting scrollTop.`);
+            try {
+                scrollContainer.scrollTop = scrollTargetPx;
+                console.log(`[Effect 2 @ ${Date.now()}] scrollTop set via RAF to ${scrollTargetPx.toFixed(2)}. Setting Done=true.`);
+                // IMPORTANT: Setting state inside RAF callback
+                setInitialScrollDone(true); 
+            } catch (scrollError) {
+                console.error(`[Effect 2 @ ${Date.now()}] Error setting scrollTop via RAF:`, scrollError);
+            }
+        });
+
+    }
+
+    // Cleanup function to cancel the frame if the effect re-runs before it fires
+    return () => {
+        if (animationFrameId !== null) {
+            console.log(`[Effect 2 @ ${Date.now()}] Cleaning up pending RAF.`);
+            cancelAnimationFrame(animationFrameId);
+        }
     };
 
-    calculatePosition(); // Initial calculation
-    const intervalId = setInterval(calculatePosition, 60000); // Update every minute
+  }, [currentTimePosition, initialScrollDone]); 
 
-    return () => clearInterval(intervalId);
-
-  }, []); // Run once on mount, interval updates it
+  // Effect 3: Reset initial scroll flag when view or date changes
+  useEffect(() => {
+      console.log(`[Effect 3: Reset Scroll Flag] View: ${activeView}, Date: ${currentDate.toISOString()}, Resetting initialScrollDone.`);
+      setInitialScrollDone(false);
+  }, [activeView, currentDate]);
 
   // Updated Effect for fetching events based on viewInterval
   useEffect(() => {
     const fetchEvents = async () => {
+      console.log(`[Effect: Fetch Events] Starting fetch for interval: ${formatISO(viewInterval.start)} - ${formatISO(viewInterval.end)}`);
+      console.time('[Effect: Fetch Events] Fetch Duration'); // Start timer
       setIsLoading(true);
       setError(null);
-      // Use viewInterval for start and end dates
       const startDate = formatISO(viewInterval.start);
       const endDate = formatISO(viewInterval.end);
-      console.log(`[CalendarView - ${activeView}] Fetching events from ${startDate} to ${endDate}`);
+      // console.log(`[CalendarView - ${activeView}] Fetching events from ${startDate} to ${endDate}`); // Already logged above
 
       try {
         const response = await fetch(`/api/calendar/events?startDate=${startDate}&endDate=${endDate}`);
+        console.timeLog('[Effect: Fetch Events] Fetch Duration', '- fetch responded'); // Log time when fetch returns
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log(`[CalendarView - ${activeView}] Fetched events data:`, data);
+        console.timeLog('[Effect: Fetch Events] Fetch Duration', '- response parsed'); // Log time when JSON parsed
+        // console.log(`[CalendarView - ${activeView}] Fetched events data:`, data); // Can be noisy
         setEvents(data.events || []);
       } catch (err) {
-        console.error("Failed to fetch events:", err);
+        console.error("[Effect: Fetch Events] Failed:", err);
         setError(err instanceof Error ? err.message : "An unknown error occurred");
         setEvents([]);
       } finally {
         setIsLoading(false);
+        console.timeEnd('[Effect: Fetch Events] Fetch Duration'); // End timer and log total duration
       }
     };
 
     fetchEvents();
-  }, [viewInterval, activeView]); // Refetch when viewInterval changes (due to currentDate or activeView change)
+  }, [viewInterval, activeView]); 
 
   // Memoize the processed event layouts - Now considers displayDates
   const processedEventsByDayIndex = useMemo(() => {
+    console.time('[useMemo] processedEventsByDayIndex'); // Start timer
     const groupedLayouts: Record<number, ProcessedEventLayout[]> = {};
     if (displayDates.length === 0 || activeView === 'month') { // Skip month for now
+        console.timeEnd('[useMemo] processedEventsByDayIndex'); // End timer early if skipping
         return groupedLayouts; 
     }
 
@@ -288,8 +362,9 @@ export function CalendarView() {
       groupedLayouts[dayIndex] = finalLayouts;
       // --- End Overlap Calculation ---\
     }
+    console.timeEnd('[useMemo] processedEventsByDayIndex'); // End timer after loop completes
     return groupedLayouts;
-  }, [events, displayDates, activeView]); // Recalculate when events, displayDates, or view change
+  }, [events, displayDates, activeView]); 
 
   // Group events by date string for Month view
   const eventsByDateMap = useMemo(() => {
@@ -376,8 +451,6 @@ export function CalendarView() {
   const handleViewChange = (value: string) => {
       if (value && (value === 'day' || value === 'week' || value === 'month')) {
           setActiveView(value as 'day' | 'week' | 'month');
-          // Reset time indicator when changing view
-          setCurrentTimePosition(null); 
       }
   };
 
@@ -497,30 +570,34 @@ export function CalendarView() {
 
            {/* Day/Week View Rendering */} 
            {(activeView === 'day' || activeView === 'week') && (
-            <div className="flex flex-grow overflow-hidden"> {/* Main flex container for time + days */}
-                {/* Time Column */}
-                <div className="w-16 text-xs text-center pt-8 pr-1 border-r border-gray-200 dark:border-gray-700 flex-shrink-0">
+            // Add the ref to THIS div
+            <div ref={scrollContainerRef} className="flex-grow relative overflow-y-auto"> 
+                {/* Time Column: Positioned absolutely/sticky within scroll container */}
+                <div className="absolute left-0 top-0 z-20 w-16 text-xs text-center border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-shrink-0">
                     {/* Header Spacer */}
-                    <div className="h-16 border-b border-gray-200 dark:border-gray-700"></div>
-                    {/* Time Labels */}
+                    <div className="h-16 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 bg-inherit"></div> {/* Sticky spacer */}
+                    {/* Time Labels Loop (remove data-hour) */}
                     {timeLabels.map((label, index) => (
-                        <div key={index} className="h-12 flex items-center justify-center text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-800">
+                        <div 
+                            key={index} 
+                            className="h-12 flex items-center justify-center text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-800">
                             <span>{label}</span>
                         </div>
                     ))}
                 </div>
 
-                {/* Day(s) Columns Area */}
-                <div className="flex-grow overflow-y-auto relative"> {/* Scrollable area */}
-                    {/* Header Row (Sticky) */}
+                {/* Day(s) Columns Area: Offset by time column width */}
+                <div className="pl-16 relative"> {/* Add pl-16 */}
+                    {/* Header Row (Sticky, needs left offset) */}
                     <div className={cn(
                         "sticky top-0 z-10 grid bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700",
                         activeView === 'week' ? "grid-cols-7" : "grid-cols-1"
+                        // Position adjusted implicitly by parent's padding
                     )}>
                       {displayDates.map((date, index) => (
                         <div key={index} className={cn(
                            "text-center py-2",
-                           activeView === 'week' && index < 6 && "border-r border-gray-200 dark:border-gray-700" // Vertical dividers in header
+                           activeView === 'week' && index < 6 && "border-r border-gray-200 dark:border-gray-700" 
                            )}>
                           {activeView === 'week' && (
                             <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
@@ -538,7 +615,7 @@ export function CalendarView() {
                     </div>
 
                     {/* Grid Content (Events Layer and Background Lines) */}
-                    <div className="relative"> {/* Container for absolute positioning */}
+                    <div className="relative min-h-[calc(24*3rem)]"> {/* Container needs min-height for lines. 24 hours * 3rem/hour */}
                         {/* Background Grid Lines */}
                         <div className={cn(
                             "absolute inset-0 grid", // Covers the entire area below header
@@ -546,13 +623,13 @@ export function CalendarView() {
                         )}>
                             {/* Horizontal Lines (Full Span) */}
                             <div className="col-span-full grid">
-                                {Array.from({ length: (END_HOUR - START_HOUR) * 2 }).map((_, i) => ( // Multiply by 2 for 30min intervals
-                                    <div key={i} className="h-6 border-t border-gray-100 dark:border-gray-800"></div> // Half height for 30min lines
+                                {Array.from({ length: (END_HOUR - START_HOUR) * 2 }).map((_, i) => ( 
+                                    <div key={i} className="h-6 border-t border-gray-100 dark:border-gray-800"></div> 
                                 ))}
                             </div>
                             {/* Vertical Lines (Only for Week View) */}
                             {activeView === 'week' && displayDates.slice(0, -1).map((_, dayIndex) => (
-                                 <div key={dayIndex} className={`col-start-${dayIndex + 2} row-start-1 row-span-full border-l border-gray-200 dark:border-gray-700`}></div> // Use border-l on column start + 2
+                                 <div key={dayIndex} className={`col-start-${dayIndex + 1} row-start-1 row-span-full border-l border-gray-200 dark:border-gray-700 -ml-px`}></div> // Align with grid columns
                             ))}
                         </div>
 
@@ -561,24 +638,24 @@ export function CalendarView() {
                             "relative grid", // Must be relative for absolute event positioning
                             activeView === 'week' ? "grid-cols-7" : "grid-cols-1"
                         )}>
-                            {/* Current Time Indicator */}
+                            {/* Current Time Indicator (uses calculated variable) */}
                             {currentTimePosition !== null && (
                                 <div
-                                   className="absolute left-0 right-0 border-t-2 border-red-500 z-20"
+                                   className="absolute left-0 right-0 border-t-2 border-red-500 z-30"
                                    style={{ top: `${currentTimePosition}rem` }}
                                 >
-                                   <div className="absolute -left-1 -top-1 h-2 w-2 bg-red-500 rounded-full"></div>
+                                   <div className="absolute left-0 -top-1 h-2 w-2 bg-red-500 rounded-full"></div>
                                 </div>
                             )}
 
                            {/* Render Events per Day Column */}
                            {displayDates.map((date, dayIndex) => (
                                <div key={dayIndex} className={cn(
-                                   "relative min-h-full", // Ensure column takes height
+                                   "relative", 
                                    activeView === 'week' ? `col-start-${dayIndex + 1}` : 'col-start-1'
                                )}>
-                                   {/* Render timed events using processedEventsByDayIndex */}
-                                   {processedEventsByDayIndex[dayIndex]?.map(({ event, layout }) => (
+                                   {/* === TEMP: Comment out event rendering to test performance === */}
+                                   {/* {processedEventsByDayIndex[dayIndex]?.map(({ event, layout }) => (
                                        <div
                                            key={event.id}
                                            className="absolute bg-blue-100 dark:bg-blue-900 border border-blue-300 dark:border-blue-700 rounded p-1 text-xs overflow-hidden shadow hover:shadow-md transition-shadow duration-150"
@@ -587,24 +664,24 @@ export function CalendarView() {
                                                height: `${layout.height}rem`,
                                                left: layout.left,
                                                width: layout.width,
-                                               zIndex: layout.zIndex,
+                                               zIndex: layout.zIndex + 20, 
                                            }}
                                            title={`${event.summary || '(No title)'} (${format(parseISO(event.start!.dateTime!), 'h:mm a')} - ${format(parseISO(event.end!.dateTime!), 'h:mm a')})`}
                                        >
                                            <p className="font-semibold truncate text-blue-800 dark:text-blue-200">{event.summary || '(No title)'}</p>
                                            <p className="text-blue-600 dark:text-blue-300">{`${format(parseISO(event.start!.dateTime!), 'h:mm a')} - ${format(parseISO(event.end!.dateTime!), 'h:mm a')}`}</p>
                                        </div>
-                                   ))
-                               }
-                           </div>
+                                   ))} */}
+                                   {/* === END TEMP === */}
+                               </div>
                            ))}
                         </div> {/* End Event Layer & Time Indicator Grid */}
                     </div> {/* End Grid Content */}
                 </div> {/* End Day(s) Columns Area */}
-            </div> /* End Day/Week Flex Container */
+            </div> /* End Single Scrollable Container */
            )}
           </> 
       )} 
-    </div> // End Component Wrapper
-  );
-}
+    </div> // Ensure this closing div is correct
+  ); // Ensure this closing parenthesis is correct
+} // Ensure this closing brace is correct

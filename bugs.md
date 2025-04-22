@@ -1,20 +1,8 @@
-Console Error
-
-
-Error: Failed to query Google Calendar free/busy information. Google Error: Request had insufficient authentication scopes.
-
-components\focus-controls-sidebar.tsx (101:15) @ handleAddFocusTime
-
-
-   99 |
-  100 |       if (!response.ok) {
-> 101 |         throw new Error(result.error || `HTTP error! status: ${response.status}`);
-      |               ^
-  102 |       }
-  103 |
-  104 |       toast.success(result.message || 'Focus time scheduled successfully!', {
-Call Stack
-1
-
-handleAddFocusTime
-components\focus-controls-sidebar.tsx (101:15)
+[useMemo] processedEventsByDayIndex: 0.009765625 ms
+C:\Users\baudi\OneDrive\Desktop\CalmHour\calmhour-landing\components\calendar-view.tsx:357 [useMemo] processedEventsByDayIndex: 0.0029296875 ms
+C:\Users\baudi\OneDrive\Desktop\CalmHour\calmhour-landing\components\calendar-view.tsx:168 [Effect 1: Interval Tick] Forcing re-render.
+C:\Users\baudi\OneDrive\Desktop\CalmHour\calmhour-landing\components\calendar-view.tsx:183 [Effect 2 @ 1745248713412] Initial Scroll Check. Position: 33.9, Done: false, Ref Exists: true
+C:\Users\baudi\OneDrive\Desktop\CalmHour\calmhour-landing\components\calendar-view.tsx:190 [Effect 2 @ 1745248713412] Conditions met. Target hour: 10
+C:\Users\baudi\OneDrive\Desktop\CalmHour\calmhour-landing\components\calendar-view.tsx:194 [Effect 2 @ 1745248713412] Found target element for hour 10. Attempting scrollIntoView.
+C:\Users\baudi\OneDrive\Desktop\CalmHour\calmhour-landing\components\calendar-view.tsx:200 [Effect 2 @ 1745248713413] scrollIntoView called for hour 10. Setting Done=true.
+C:\Users\baudi\OneDrive\Desktop\CalmHour\calmhour-landing\components\calendar-view.tsx:183 [Effect 2 @ 1745248713433] Initial Scroll Check. Position: 33.9, Done: true, Ref Exists: true
