@@ -14,7 +14,7 @@ import { Activity, CheckCircle, XCircle } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardActionCardContent } from "@/components/dashboard-action-card-content";
 import { FocusControlsSidebar } from "@/components/focus-controls-sidebar";
-import { CalendarView } from "@/components/calendar-view";
+import { FullCalendarView } from "@/components/full-calendar-view";
 
 export default async function DashboardPage() {
   // Await the async createClient function
@@ -65,7 +65,7 @@ export default async function DashboardPage() {
                 </div>
                 <CalendarConnectButton isConnected={isCalendarConnected} />
                 
-                {!isCalendarConnected && (
+                 {!isCalendarConnected && (
                     <p className="text-sm text-muted-foreground mt-2">
                       Connect your Google Calendar to get started.
                     </p>
@@ -86,8 +86,8 @@ export default async function DashboardPage() {
               </CardContent>
             </Card>
           </div>
-          <div className="flex-1">
-            <CalendarView />
+          <div className="flex-1 rounded-lg border shadow-sm">
+            <FullCalendarView />
           </div>
         </main>
         
