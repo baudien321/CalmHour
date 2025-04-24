@@ -112,3 +112,46 @@
     @apply bg-background text-foreground; 
   }
 }
+
+/* Custom FullCalendar Styles */
+.fc-custom-view .fc-timegrid-col {
+  border-left: none !important; /* Remove left border */
+  border-right: none !important; /* Remove right border */
+}
+
+/* Optional: Ensure first/last columns don't have outer borders if needed */
+.fc-custom-view .fc-timegrid-col:first-child {
+  border-left: none !important;
+}
+.fc-custom-view .fc-timegrid-col:last-child {
+  border-right: none !important;
+}
+
+/* Uncomment and set the height for time slots */
+.fc-custom-view .fc-timegrid-slot {
+    height: 3rem; /* Set explicit height for 30min slots */
+    border-bottom: 1px solid theme('colors.gray.200'); /* Horizontal lines - use Tailwind theme */
+}
+
+/*
+.fc-custom-view .fc-timegrid-col:last-child .fc-daygrid-day-frame {
+    border-right: 0; // Remove border on the last column if needed
+}
+
+.fc-custom-view .fc-timegrid-now-indicator-line {
+    border-color: #ef4444; // Red color for the line
+    border-width: 2px;
+}
+
+// Style the dot on the now indicator - might require more specific selectors
+.fc-custom-view .fc-timegrid-now-indicator-arrow {
+   border-color: #ef4444; 
+   // If you want a circle instead of arrow:
+   // margin-top: -7px; // Adjust position
+   // border-radius: 9999px;
+   // width: 12px;
+   // height: 12px;
+   // background-color: #ef4444;
+   // border: none; 
+}
+*/
