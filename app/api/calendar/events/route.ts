@@ -11,6 +11,7 @@ interface CalendarEvent {
   summary?: string | null;
   start?: { dateTime?: string | null; date?: string | null; timeZone?: string | null } | null;
   end?: { dateTime?: string | null; date?: string | null; timeZone?: string | null } | null;
+  colorId?: string | null;
 }
 
 export async function GET(request: NextRequest) {
@@ -133,7 +134,8 @@ export async function GET(request: NextRequest) {
             timeMax: timeMax,
             singleEvents: true, // Expand recurring events into single instances
             orderBy: 'startTime',
-            maxResults: 250 // Limit results to avoid excessive data
+            maxResults: 250, // Limit results to avoid excessive data
+            fields: 'items(id,summary,start,end,colorId)' // Specify fields including colorId
         });
 
         if (response.data.items) {
@@ -142,7 +144,7 @@ export async function GET(request: NextRequest) {
                 summary: event.summary,
                 start: event.start,
                 end: event.end,
-                // colorId: event.colorId // Optionally include colorId
+                colorId: event.colorId // Include colorId in the mapped object
             }));
             console.log(`[API /calendar/events] Found ${fetchedEvents.length} events.`);
         }

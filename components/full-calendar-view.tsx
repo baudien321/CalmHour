@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
+import type { EventClickArg } from '@fullcalendar/core';
 import { getHours, formatISO, parseISO, startOfWeek, endOfWeek, isSameDay, isWithinInterval, isSameMonth, startOfDay, endOfDay, startOfMonth, endOfMonth, subDays, addDays, subWeeks, addWeeks, subMonths, addMonths, format } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { AlertCircle, ChevronLeft, ChevronRight, Users, Target } from 'lucide-react';
@@ -16,7 +17,7 @@ interface ApiCalendarEvent {
   summary?: string | null;
   start?: { dateTime?: string | null; date?: string | null; timeZone?: string | null } | null;
   end?: { dateTime?: string | null; date?: string | null; timeZone?: string | null } | null;
-  // Add other properties if needed, like colorId
+  colorId?: string | null; // Add colorId here
 }
 
 // FullCalendar event format
@@ -28,6 +29,7 @@ interface FullCalendarEvent {
   allDay: boolean;
   extendedProps: {
     isFocusTime?: boolean; // Flag to identify focus time events
+    colorId?: string | null; // Add colorId here as well
   };
 }
 
@@ -37,10 +39,17 @@ type MappedEvent = Omit<FullCalendarEvent, 'start' | 'end' | 'extendedProps'> & 
     end: string | null | undefined; 
     extendedProps: {
         isFocusTime?: boolean;
+        colorId?: string | null; // Add colorId here
     };
 };
 
-export function FullCalendarView() {
+// --- Add Props interface --- 
+interface FullCalendarViewProps {
+  onEventClick?: (clickInfo: EventClickArg) => void; // Optional callback prop
+}
+// --- END Add Props interface ---
+
+export function FullCalendarView({ onEventClick }: FullCalendarViewProps) {
   // --- State --- 
   const [activeView, setActiveView] = useState<'timeGridWeek' | 'timeGridDay' | 'dayGridMonth'>('timeGridWeek');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -101,7 +110,10 @@ export function FullCalendarView() {
                 start: apiEvent.start?.dateTime || apiEvent.start?.date,
                 end: apiEvent.end?.dateTime || apiEvent.end?.date,
                 allDay: !!apiEvent.start?.date,
-                extendedProps: { isFocusTime: isFocus }, // Add the flag here
+                extendedProps: { 
+                    isFocusTime: isFocus,
+                    colorId: apiEvent.colorId // Store colorId in extendedProps
+                },
             };
         });
 
@@ -238,9 +250,40 @@ export function FullCalendarView() {
   // Render custom event content (Icon + Title)
   const renderEventContent = (eventInfo: any /* FullCalendar EventContentArg */) => {
     const isFocus = eventInfo.event.extendedProps.isFocusTime;
-    const Icon = isFocus ? Target : Users;
-    const iconColor = isFocus ? "text-green-800" : "text-blue-800";
-    const textColor = isFocus ? "text-green-800" : "text-blue-800";
+    const colorId = eventInfo.event.extendedProps.colorId;
+
+    // --- Determine colors based on colorId (fallback to old logic if no colorId) ---
+    let iconColor = "text-gray-800"; // Default
+    let textColor = "text-gray-800"; // Default
+
+    // Map colorId to Tailwind text colors (adjust these classes as needed)
+    // Using Google's default color palette names for reference
+    // https://developers.google.com/calendar/api/guides/colors
+    switch (colorId) {
+        case '1': iconColor = "text-blue-800"; textColor = "text-blue-800"; break; // Lavender -> Blue
+        case '2': iconColor = "text-green-800"; textColor = "text-green-800"; break; // Sage -> Green
+        case '3': iconColor = "text-purple-800"; textColor = "text-purple-800"; break; // Grape -> Purple
+        case '4': iconColor = "text-red-800"; textColor = "text-red-800"; break; // Flamingo -> Red
+        case '5': iconColor = "text-yellow-800"; textColor = "text-yellow-800"; break; // Banana -> Yellow
+        case '6': iconColor = "text-orange-800"; textColor = "text-orange-800"; break; // Tangerine -> Orange
+        case '7': iconColor = "text-cyan-800"; textColor = "text-cyan-800"; break; // Peacock -> Cyan
+        case '8': iconColor = "text-gray-800"; textColor = "text-gray-800"; break; // Graphite -> Gray
+        case '9': iconColor = "text-blue-800"; textColor = "text-blue-800"; break; // Blueberry -> Blue
+        case '10': iconColor = "text-emerald-800"; textColor = "text-emerald-800"; break; // Basil -> Emerald
+        case '11': iconColor = "text-red-800"; textColor = "text-red-800"; break; // Tomato -> Red
+        default:
+            // Fallback to old logic if no colorId or unknown colorId
+            if (isFocus) {
+                iconColor = "text-green-800"; 
+                textColor = "text-green-800";
+            } else {
+                iconColor = "text-blue-800"; 
+                textColor = "text-blue-800";
+            }
+            break;
+    }
+
+    const Icon = isFocus ? Target : Users; // Keep icon based on focus status
 
     return (
         <div className="flex items-center text-xs overflow-hidden h-full px-1">
@@ -255,13 +298,35 @@ export function FullCalendarView() {
   // Apply event class names for background/border styling
   const getEventClassNames = (arg: any /* FullCalendar EventClassNamesArg */) => {
       const isFocus = arg.event.extendedProps.isFocusTime;
-      const baseClasses = "rounded shadow-sm border-l-4 p-0.5"; // Adjusted padding for content area
-      const focusClasses = "bg-green-100 border-green-500 hover:bg-green-200";
-      const meetingClasses = "bg-blue-100 border-blue-500 hover:bg-blue-200";
-      
+      const colorId = arg.event.extendedProps.colorId;
+      const baseClasses = "rounded shadow-sm border-l-4 p-0.5"; // Keep base classes
+
+      // --- Map colorId to Tailwind background/border/hover classes --- 
+      let colorClasses = "bg-gray-100 border-gray-500 hover:bg-gray-200"; // Default
+
+      switch (colorId) {
+          case '1': colorClasses = "bg-blue-100 border-blue-500 hover:bg-blue-200"; break; // Lavender
+          case '2': colorClasses = "bg-green-100 border-green-500 hover:bg-green-200"; break; // Sage
+          case '3': colorClasses = "bg-purple-100 border-purple-500 hover:bg-purple-200"; break; // Grape
+          case '4': colorClasses = "bg-red-100 border-red-500 hover:bg-red-200"; break; // Flamingo
+          case '5': colorClasses = "bg-yellow-100 border-yellow-500 hover:bg-yellow-200"; break; // Banana
+          case '6': colorClasses = "bg-orange-100 border-orange-500 hover:bg-orange-200"; break; // Tangerine
+          case '7': colorClasses = "bg-cyan-100 border-cyan-500 hover:bg-cyan-200"; break; // Peacock
+          case '8': colorClasses = "bg-gray-100 border-gray-500 hover:bg-gray-200"; break; // Graphite
+          case '9': colorClasses = "bg-blue-100 border-blue-500 hover:bg-blue-200"; break; // Blueberry
+          case '10': colorClasses = "bg-emerald-100 border-emerald-500 hover:bg-emerald-200"; break; // Basil
+          case '11': colorClasses = "bg-red-100 border-red-500 hover:bg-red-200"; break; // Tomato
+          default:
+              // Fallback to old focus/meeting logic if no colorId or unknown colorId
+              colorClasses = isFocus 
+                ? "bg-green-100 border-green-500 hover:bg-green-200" 
+                : "bg-blue-100 border-blue-500 hover:bg-blue-200";
+              break;
+      }
+
       return [
           baseClasses,
-          isFocus ? focusClasses : meetingClasses
+          colorClasses // Use the determined color classes
       ].join(' ');
   };
 
@@ -337,46 +402,34 @@ export function FullCalendarView() {
             <FullCalendar
               ref={calendarRef}
               plugins={[dayGridPlugin, timeGridPlugin]}
-              initialView={activeView} // Controlled by state
-              initialDate={currentDate} // Keep initialDate synced
-              headerToolbar={false} // Disable internal header, using custom one
-              events={events} // Pass fetched & formatted events
-              height="100%" // Fill the container
-              // Expand time range back to full 24 hours
-              slotMinTime="00:00:00" 
-              slotMaxTime="24:00:00" 
-              slotDuration="00:30:00" // Match example slot duration
-              slotLabelInterval="00:30:00" // Match example label frequency
-              slotLabelFormat={{ // Format time labels like "8:00 AM"
+              initialView={activeView}
+              initialDate={currentDate}
+              headerToolbar={false}
+              events={events}
+              height="100%"
+              slotMinTime="00:00:00"
+              slotMaxTime="24:00:00"
+              slotDuration="00:30:00"
+              slotLabelInterval="00:30:00"
+              slotLabelFormat={{
                   hour: 'numeric',
                   minute: '2-digit',
                   omitZeroMinute: false,
                   meridiem: 'short'
               }}
               nowIndicator={true}
-              datesSet={handleDatesSet} // Update state when FC navigates
-              allDaySlot={false} // Hide the all-day slot row like the example
-              
-              // --- Custom Styling & Rendering Props ---
-              dayHeaderContent={renderDayHeaderContent} // Custom day headers
-              eventContent={renderEventContent} // Custom event rendering
-              eventClassNames={getEventClassNames} // Apply classes for event styling
-              
-              // --- Class Names for Fine-tuning (Add Tailwind classes) ---
-               viewClassNames={['fc-custom-view']} // Add a root class for potential CSS overrides
-               slotLabelClassNames={[ // Style the time labels on the left
-                   'text-xs', 'text-gray-500', 'text-right', 'pr-2', // Base styles
-                   // Relative positioning to mimic the HTML example's offset - might need CSS
-                   'relative', 'top-[-0.5em]' 
-               ]}
-               dayHeaderClassNames={['border-b', 'border-gray-200']} // Border below day headers
-               dayCellClassNames={[]} // Vertical borders between days removed 
-               // TODO: Style the horizontal lines between time slots (might need CSS)
-               // TODO: Style the now indicator (red line) - might need CSS
-               
-               // Add other desired FullCalendar options here
-               // eventClick={...} 
-               // dateClick={...}
+              datesSet={handleDatesSet}
+              allDaySlot={false}
+              eventClick={onEventClick}
+              eventContent={renderEventContent}
+              eventClassNames={getEventClassNames}
+              viewClassNames={['fc-custom-view']}
+              slotLabelClassNames={[
+                  'text-xs', 'text-gray-500', 'text-right', 'pr-2',
+                  'relative', 'top-[-0.5em]'
+              ]}
+              dayHeaderClassNames={['border-b', 'border-gray-200']}
+              dayCellClassNames={[]}
             />
         </div>
     </div>

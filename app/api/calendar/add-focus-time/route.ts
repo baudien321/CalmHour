@@ -28,6 +28,7 @@ interface AddFocusTimeRequestBody {
   duration: number; // Duration in minutes
   sessionName?: string;
   priority?: 'high' | 'medium' | 'low'; // Add priority
+  startTime?: string; // <-- Add optional specific start time (ISO string)
 }
 
 // Google Calendar Color IDs (Examples - adjust as desired)
@@ -194,11 +195,14 @@ export async function POST(request: NextRequest) {
     let duration: number;
     let sessionName: string | undefined;
     let priority: 'high' | 'medium' | 'low' | undefined;
+    let startTimeISO: string | undefined; // <-- Variable for specific start time
     try {
         const body: AddFocusTimeRequestBody = await request.json();
         duration = body.duration;
         sessionName = body.sessionName;
-        priority = body.priority; // Get priority
+        priority = body.priority;
+        startTimeISO = body.startTime; // <-- Get startTime from body
+
         if (typeof duration !== 'number' || duration <= 0) {
             throw new Error('Invalid duration provided.');
         }
@@ -206,6 +210,15 @@ export async function POST(request: NextRequest) {
         if (priority && !['high', 'medium', 'low'].includes(priority)) {
              console.warn(`[API /add-focus-time] Invalid priority value received: ${priority}. Using default color.`);
              priority = undefined; // Reset to default if invalid
+        }
+        // Optional: Validate startTimeISO format if provided
+        if (startTimeISO) {
+            try {
+                parseISO(startTimeISO); // Attempt to parse to validate format
+            } catch (timeParseError) {
+                 console.warn(`[API /add-focus-time] Invalid startTime format received: ${startTimeISO}. Will attempt auto-scheduling.`);
+                 startTimeISO = undefined; // Treat as invalid, fall back to auto-scheduling
+            }
         }
     } catch (parseError) {
          return NextResponse.json({ error: 'Invalid request body. Ensure "duration" (number in minutes) is provided.' }, { status: 400 });
@@ -332,75 +345,124 @@ export async function POST(request: NextRequest) {
     // Create the calendar API client AFTER potentially refreshing and setting credentials
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-    // 5. Find the next available slot
-    let availableSlot: { start: string, end: string } | null = null;
-    try {
-        const userTimeZone = DEFAULT_TIMEZONE; 
-        // Pass the final, potentially refreshed authClient
-        availableSlot = await findNextAvailableSlot(calendar, duration, userTimeZone, oauth2Client);
-    } catch (findError: any) {
-        // Log the detailed error from findNextAvailableSlot
-        console.error('[API /add-focus-time] Error finding slot:', findError);
-        // Pass the more detailed error message to the frontend
-        return NextResponse.json({ error: findError.message || 'Failed to find available slot.' }, { status: 500 });
-    }
-    
-    if (!availableSlot) {
-      return NextResponse.json({ error: `Could not find an available ${duration}-minute slot within the next 7 working days.` }, { status: 404 }); // Not Found or Bad Request? 404 seems okay
-    }
+    // --- Determine Event Start/End Time --- 
+    let eventStartISO: string = ""; // Initialize with empty string
+    let eventEndISO: string = "";   // Initialize with empty string
+    let userTimeZone = DEFAULT_TIMEZONE; // Use default for now
 
-    // 6. Create the event
-    const eventSummary = sessionName || `Focus Time (CalmHour)`;
-    // Determine color based on priority
-    const colorId = priority ? PRIORITY_COLOR_MAP[priority] : PRIORITY_COLOR_MAP.default;
+    if (startTimeISO) {
+        // Use the provided start time
+        console.log(`[API /add-focus-time] Using provided start time: ${startTimeISO}`);
+        try {
+            const startDate = parseISO(startTimeISO);
+            const endDate = addMinutes(startDate, duration);
+            eventStartISO = formatISO(startDate); 
+            eventEndISO = formatISO(endDate);
+            // Optionally try to determine user timezone if needed for event data,
+            // but Google Calendar API handles ISO strings well.
+        } catch (e) {
+             console.error("[API /add-focus-time] Error calculating end time from provided start time. Falling back to auto-find.", e);
+             // Fallback to auto-find if calculation fails for some reason
+             startTimeISO = undefined; 
+        }
+    }
     
+    // If no valid startTimeISO was provided or calculation failed, find next available slot
+    if (!startTimeISO && !eventStartISO) { // Check if still unassigned
+        console.log("[API /add-focus-time] No specific start time provided or fallback triggered. Finding next available slot...");
+        // Get user timezone (optional enhancement)
+        // const { data: profile } = await supabase.from('profiles').select('timezone').eq('id', userId).single();
+        // userTimeZone = profile?.timezone || DEFAULT_TIMEZONE;
+        
+        try {
+           const availableSlot = await findNextAvailableSlot(calendar, duration, userTimeZone, oauth2Client);
+           if (!availableSlot) {
+               // Throw an error instead of returning directly to be caught by the main try/catch
+               throw new Error('Could not find an available time slot.');
+           }
+           eventStartISO = availableSlot.start;
+           eventEndISO = availableSlot.end;
+        } catch (findSlotError: any) {
+             // Re-throw error to be caught by the main handler
+             console.error("[API /add-focus-time] Error during findNextAvailableSlot:", findSlotError.message);
+             throw findSlotError; 
+        }
+    }
+    // --- END Determine Event Start/End Time ---
+
+    // 5. Prepare event data
+    const eventSummary = (sessionName && sessionName.trim() !== '') ? sessionName.trim() : 'Focus Time';
+    const eventColorId = PRIORITY_COLOR_MAP[priority || 'default'];
+    const eventDescription = `Scheduled via CalmHour. Duration: ${duration} minutes. Priority: ${priority || 'default'}.`;
+
     const event = {
-      summary: eventSummary,
-      description: `Scheduled via CalmHour.${priority ? ` Priority: ${priority}` : ''}`,
-      start: {
-        dateTime: availableSlot.start, // Ensure this is ISO string with timezone offset
-        timeZone: DEFAULT_TIMEZONE, // Specify the timezone for the event itself
-      },
-      end: {
-        dateTime: availableSlot.end, // Ensure this is ISO string with timezone offset
-        timeZone: DEFAULT_TIMEZONE,
-      },
-      colorId: colorId, // Set the color ID
+        summary: eventSummary,
+        description: eventDescription,
+        start: {
+            dateTime: eventStartISO,
+            // timeZone: userTimeZone, // Can specify timezone, but ISO usually sufficient
+        },
+        end: {
+            dateTime: eventEndISO,
+            // timeZone: userTimeZone,
+        },
+        colorId: eventColorId, 
+        // Optional: Add reminders, etc.
+        reminders: {
+            useDefault: false,
+            overrides: [
+                // { method: 'popup', minutes: 10 }, // Example: 10-minute popup reminder
+            ],
+        },
     };
 
-    try {
-      const createdEvent = await calendar.events.insert({
+    // --- DEBUG LOGGING BEFORE INSERT ---
+    console.log(`[API /add-focus-time] Attempting to insert event: ${JSON.stringify(event)}`);
+    console.log("--- [API /add-focus-time] CREDS JUST BEFORE event INSERT:", JSON.stringify(oauth2Client.credentials));
+    // --- END DEBUG LOGGING ---
+
+    // 6. Insert event into Google Calendar
+    const createdEvent = await calendar.events.insert({
         calendarId: 'primary',
         requestBody: event,
-      });
-      console.log(`[API /add-focus-time] Event created with priority ${priority || 'default'} (colorId: ${colorId}):`, createdEvent.data.id);
-      return NextResponse.json({ 
-          message: 'Focus time scheduled successfully!', 
-          event: {
-              id: createdEvent.data.id,
-              summary: createdEvent.data.summary,
-              start: createdEvent.data.start?.dateTime,
-              end: createdEvent.data.end?.dateTime,
-              link: createdEvent.data.htmlLink,
-              colorId: createdEvent.data.colorId // Return colorId for potential frontend use
-          } 
-      }, { status: 201 }); // 201 Created
-    } catch (insertError: any) {
-      console.error('[API /add-focus-time] Failed to insert event:', insertError);
-       // Check for specific Google API errors if needed
-       if (insertError.code === 403) {
-           return NextResponse.json({ error: 'Permission denied. Check Google Calendar API permissions.' }, { status: 403 });
-       }
-       if (insertError.code === 401) { // Might indicate token issue despite refresh attempt
-            await supabase.from('google_tokens').delete().eq('user_id', userId); // Clean up potentially bad token
-            return NextResponse.json({ error: 'Authentication failed with Google Calendar. Please reconnect.' }, { status: 401 });
-       }
-      return NextResponse.json({ error: `Failed to create calendar event: ${insertError.message || 'Unknown Google API error'}` }, { status: 500 });
-    }
+    });
+
+    console.log('[API /add-focus-time] Event created successfully:', createdEvent.data.id);
+
+    // 7. Return success response
+    return NextResponse.json({
+        message: 'Focus time scheduled successfully!',
+        event: {
+            id: createdEvent.data.id,
+            summary: createdEvent.data.summary,
+            start: createdEvent.data.start?.dateTime || createdEvent.data.start?.date,
+            end: createdEvent.data.end?.dateTime || createdEvent.data.end?.date,
+            link: createdEvent.data.htmlLink,
+        }
+    });
 
   } catch (error: any) {
-    // Catch any general errors and try to return their message
-    console.error('[API /add-focus-time] General Error:', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    console.error('[API /add-focus-time] Error:', error);
+    // Try to provide more specific error messages
+    let errorMessage = "An unexpected error occurred while scheduling focus time.";
+    let statusCode = 500;
+    if (error.message.includes('Google Calendar not connected')) {
+         errorMessage = error.message;
+         statusCode = 400;
+    } else if (error.message.includes('Could not find an available time slot')) {
+         errorMessage = error.message;
+         statusCode = 409; 
+    } else if (error.message.includes('Failed to query Google Calendar')) {
+         errorMessage = error.message; // Pass detailed message from findNextAvailableSlot
+         statusCode = 502; // Bad Gateway might fit if upstream Google API failed
+    } else if (error.response?.data?.error?.message) {
+        // Extract Google API specific errors if possible
+        errorMessage = `Google API Error: ${error.response.data.error.message}`;
+        statusCode = error.response.status || 500;
+    } else if (error.message) {
+        errorMessage = error.message;
+    }
+    
+    return NextResponse.json({ error: errorMessage }, { status: statusCode });
   }
 } 

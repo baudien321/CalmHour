@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { format } from "date-fns"; // Import format for date picker
+import { Calendar as CalendarIcon } from "lucide-react"; // Import Calendar icon
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +12,10 @@ import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Info, Loader2 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"; // Import Popover
+import { Calendar } from "@/components/ui/calendar"; // Import Calendar
+import { cn } from "@/lib/utils"; // Import cn utility
+import { Plus, Info, Loader2, Clock } from "lucide-react"; // Add Clock icon
 import { toast } from "sonner";
 
 // Helper function to format minutes to hours/minutes
@@ -26,7 +32,13 @@ function formatMinutes(minutes: number): string {
   return result || '0m';
 }
 
-export function FocusControlsSidebar() {
+// --- Define props for the component --- 
+interface FocusControlsSidebarProps {
+  onEventAdded: () => void; // Callback function when an event is added
+}
+// --- END Define props ---
+
+export function FocusControlsSidebar({ onEventAdded }: FocusControlsSidebarProps) {
   // State for interactive elements
   const [duration, setDuration] = useState(60);
   const [customDuration, setCustomDuration] = useState([60]);
@@ -35,6 +47,11 @@ export function FocusControlsSidebar() {
   const [isFetchingSettings, setIsFetchingSettings] = useState(true);
   const [priority, setPriority] = useState("high");
   const [sessionName, setSessionName] = useState("");
+
+  // --- NEW State for Date/Time Selection ---
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedTime, setSelectedTime] = useState<string>("09:00"); // Default time, e.g., 9 AM
+  // --- END NEW State ---
 
   // State for API calls
   const [isAddingFocusTime, setIsAddingFocusTime] = useState(false);
@@ -80,7 +97,32 @@ export function FocusControlsSidebar() {
     const effectiveDuration = duration;
     const currentPriority = priority as 'high' | 'medium' | 'low';
 
-    console.log(`Attempting to add focus time: ${effectiveDuration} minutes, Priority: ${currentPriority}, Name: ${sessionName || '(Default)'}`);
+    // --- Combine Date and Time --- 
+    let startDateTimeISO: string | undefined = undefined;
+    if (selectedDate) {
+      try {
+        const [hours, minutes] = selectedTime.split(':').map(Number);
+        if (!isNaN(hours) && !isNaN(minutes)) {
+          const combinedDate = new Date(selectedDate); // Create a new Date object to avoid modifying the state directly
+          combinedDate.setHours(hours, minutes, 0, 0); // Set hours and minutes
+          startDateTimeISO = combinedDate.toISOString();
+          console.log(`Combined startTime: ${startDateTimeISO}`);
+        } else {
+           throw new Error('Invalid time format. Please use HH:MM.');
+        }
+      } catch (e: any) {
+         toast.error("Invalid Start Time", { description: e.message });
+         setIsAddingFocusTime(false);
+         return; // Stop execution if time is invalid
+      }
+    } else {
+       toast.error("Please select a date.");
+       setIsAddingFocusTime(false);
+       return; // Stop execution if date is not selected
+    }
+    // --- END Combine Date and Time ---
+
+    console.log(`Attempting to add focus time: ${effectiveDuration} minutes, Priority: ${currentPriority}, Name: ${sessionName || '(Default)'}, Start: ${startDateTimeISO}`);
 
     try {
       const response = await fetch('/api/calendar/add-focus-time', {
@@ -92,6 +134,7 @@ export function FocusControlsSidebar() {
           duration: effectiveDuration,
           sessionName: sessionName || undefined,
           priority: currentPriority,
+          startTime: startDateTimeISO, // <-- Add the specific start time
         }),
       });
 
@@ -102,9 +145,13 @@ export function FocusControlsSidebar() {
       }
 
       toast.success(result.message || 'Focus time scheduled successfully!', {
-          description: `Created event: ${result.event?.summary} (${new Date(result.event?.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - ${new Date(result.event?.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })})`,
+          description: result.event?.start ? `Created event: ${result.event?.summary} (${new Date(result.event.start).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })})` : 'Scheduling details unavailable.', // Improved description
           action: result.event?.link ? { label: "View Event", onClick: () => window.open(result.event.link, '_blank') } : undefined,
       });
+
+      // --- Call the callback function --- 
+      onEventAdded(); 
+      // --- END Call callback ---
 
     } catch (error: any) {
       console.error("Failed to add focus time:", error);
@@ -161,10 +208,57 @@ export function FocusControlsSidebar() {
           {isAddingFocusTime ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            <Plus className="mr-2 h-4 w-4" />
+          <Plus className="mr-2 h-4 w-4" />
           )}
           {isAddingFocusTime ? 'Scheduling...' : 'Add Focus Time Manually'}
         </Button>
+
+        {/* --- NEW Date/Time Selection UI --- */}
+        <div className="grid grid-cols-2 gap-4">
+            <div>
+                <Label htmlFor="focus-date" className="text-xs text-muted-foreground mb-1 block">Start Date</Label>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            id="focus-date"
+                            variant={"outline"}
+                            className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !selectedDate && "text-muted-foreground"
+                            )}
+                            disabled={isAddingFocusTime}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={setSelectedDate}
+                            initialFocus
+                        />
+                    </PopoverContent>
+                </Popover>
+            </div>
+            <div>
+                 <Label htmlFor="focus-time" className="text-xs text-muted-foreground mb-1 block">Start Time (HH:MM)</Label>
+                 <div className="relative">
+                     <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                     <Input 
+                         id="focus-time"
+                         type="time" // Use type="time" for better browser support/native pickers
+                         value={selectedTime}
+                         onChange={(e) => setSelectedTime(e.target.value)} 
+                         className="pl-10" // Add padding for the icon
+                         disabled={isAddingFocusTime}
+                         // Consider adding pattern="[0-9]{2}:[0-9]{2}" for basic format guidance
+                     />
+                 </div>
+            </div>
+        </div>
+        {/* --- END NEW Date/Time Selection UI --- */}
 
         <div>
           <h3 className="text-sm font-medium text-foreground mb-3">Duration</h3>

@@ -98,7 +98,7 @@ export async function GET(request: Request) {
         // Decide how to handle: throw error, store null, or use a default fallback?
         // For now, we will allow storing null, but this might cause issues later.
     } else {
-        // 7. Calculate expiry timestamp (expires_in is in seconds)
+    // 7. Calculate expiry timestamp (expires_in is in seconds)
         calculated_expires_at_timestamp = Math.floor(Date.now() / 1000) + expires_in;
         console.log(`[Callback] Calculated expires_at UNIX timestamp: ${calculated_expires_at_timestamp}`);
         try {
@@ -122,7 +122,7 @@ export async function GET(request: Request) {
         expires_at: expires_at_iso,
         scopes: scope,
       });
-      
+
     // --- START DEBUG LOGGING (AFTER UPSERT) ---
     if (dbError) {
       console.error('[Callback] Error during Supabase upsert:', dbError);

@@ -83,3 +83,91 @@ The key is simplicity - don't build recommendation engines, team coordination, o
     *   [ ] Ensure all necessary environment variables (Supabase, Google Cloud) are configured in Vercel project settings.
     *   [ ] Deploy the `calmhour-landing` project to Vercel.
     *   [ ] Test the full flow on the deployed version. 
+
+# Project Context: CalmHour Landing Page & App
+
+## Goal
+
+Create a landing page and a web application (CalmHour) that allows users to connect their Google Calendar and automatically schedule focused work blocks.
+
+## Core Components & Flow
+
+1.  **Landing Page (`app/page.tsx`)**: Simple marketing page.
+2.  **Authentication**: Supabase Auth handles user sign-up/sign-in.
+3.  **Dashboard (`app/dashboard/page.tsx`)**: Main application view after login.
+    *   Uses `components/dashboard-layout.tsx` (Client Component) for structure.
+    *   Fetches initial user/calendar data (server-side).
+    *   `DashboardLayout` manages calendar refresh state and selected event state.
+4.  **Calendar Connection (`components/calendar-connect-button.tsx`, `/api/auth/google`, `/api/auth/callback/google`)**:
+    *   Handles OAuth 2.0 flow with Google Calendar API.
+    *   Stores tokens securely (e.g., in Supabase DB `google_tokens` table).
+5.  **Calendar View (`components/full-calendar-view.tsx`)**:
+    *   Uses `FullCalendar` library to display events fetched from `/api/calendar/events`.
+    *   Fetches events based on the current view's date range.
+    *   Receives a `key` prop from `DashboardLayout` to trigger re-renders/refreshes.
+    *   Receives an `onEventClick` prop from `DashboardLayout` to handle event clicks.
+    *   **Frontend Coloring:** Styles events (background, border, text) based on the `colorId` fetched from Google Calendar (via `/api/calendar/events`). Maps Google `colorId` to Tailwind classes.
+6.  **Focus Controls (`components/focus-controls-sidebar.tsx`)**:
+    *   UI for manually adding focus blocks (date, time, duration, name, priority).
+    *   Calls `/api/calendar/add-focus-time` to create the event.
+    *   Calls `onEventAdded` prop (passed from `DashboardLayout`) after successful event creation to trigger calendar refresh.
+    *   UI for toggling auto-scheduling preference (calls `/api/user/settings`).
+7.  **Focus Block Details (`components/focus-event-details-sidebar.tsx`)**:
+    *   Displays details of a clicked focus block event.
+    *   Receives event details and an `onClose` function from `DashboardLayout`.
+    *   Rendered conditionally by `DashboardLayout` based on `selectedEvent` state.
+8.  **API Routes (`/api/`)**:
+    *   `/calendar/events`: Fetches events from Google Calendar (fetches `id`, `summary`, `start`, `end`, `colorId`).
+    *   `/calendar/add-focus-time`: Creates a new focus event on Google Calendar.
+        *   Sets event `summary` to `sessionName` input, or defaults to "Focus Time" if input is empty.
+        *   Sets event `colorId` based on the selected `priority` (High=11, Medium=5, Low=2, Default=8).
+    *   `/user/settings`: Gets/sets user preferences (e.g., auto-schedule).
+    *   Authentication routes (`/auth/*`).
+
+## Data Flow (Event Add & Refresh)
+
+1.  User configures (duration, name, **priority**, time/date) and clicks "Add Focus Time" in `FocusControlsSidebar`.
+2.  `FocusControlsSidebar` calls `/api/calendar/add-focus-time` with the details.
+3.  API route determines the event `summary` (input name or "Focus Time") and `colorId` (based on priority).
+4.  API route interacts with Google Calendar API to create the event with the determined summary and color.
+5.  On success, API responds.
+6.  `FocusControlsSidebar` receives success response and calls `onEventAdded` (which is `triggerCalendarRefresh` from `DashboardLayout`).
+7.  `triggerCalendarRefresh` updates the `calendarKey` state in `DashboardLayout`.
+8.  `DashboardLayout` re-renders, passing the new `key` to `FullCalendarView`.
+9.  `FullCalendarView`, due to the changed `key`, re-mounts or its `useEffect` refetches events from `/api/calendar/events` (now including `colorId`).
+10. `FullCalendarView` renders the new event, using the fetched `colorId` to determine its styling (background, border, text color).
+
+## Data Flow (Event Click & Details View)
+
+1.  User clicks on a focus block event in `FullCalendarView`.
+2.  `FullCalendarView` calls the `onEventClick` prop (passed from `DashboardLayout`).
+3.  `DashboardLayout`'s `handleEventClick` function receives the event details and updates the `selectedEvent` state.
+4.  `DashboardLayout` re-renders.
+5.  The `<aside>` section now renders `FocusEventDetailsSidebar` instead of `FocusControlsSidebar` because `selectedEvent` is not null.
+6.  `FocusEventDetailsSidebar` displays the details from the `selectedEvent` state.
+7.  User clicks the "Close" button in `FocusEventDetailsSidebar`.
+8.  `FocusEventDetailsSidebar` calls the `onClose` prop (which is `handleCloseDetails` from `DashboardLayout`).
+9.  `handleCloseDetails` sets `selectedEvent` back to `null`.
+10. `DashboardLayout` re-renders, now showing `FocusControlsSidebar` again. 
+
+## Current Status / Notes
+
+- **Problem:** The "Delete Focus Time" feature fails.
+- **Root Cause Analysis:**
+    - **Primary:** API route `app/api/calendar/delete-focus-time/route.ts` incorrectly queried non-existent `user_connections` table instead of `google_tokens`. (FIXED)
+    - **Secondary:** Runtime error `Route "/api/calendar/delete-focus-time" used cookies().get(...) ... cookies() should be awaited...` was observed, indicating incorrect usage of `@supabase/ssr` helpers. (FIXED by awaiting `cookies()`)
+- **Fix Applied:**
+    - Modified `app/api/calendar/delete-focus-time/route.ts` to query `google_tokens`.
+    - Updated `select` statement columns to `access_token`, `refresh_token`.
+    - Corrected cookie handling by awaiting `cookies()` before passing to `createServerClient`.
+- **Next Step:** Test the "Delete Focus Time" functionality.
+
+## Current Status / Notes (Update)
+
+- **Problem:** After fixing the initial API issues, testing revealed a new error: `Error: Missing calendarId or eventId at DashboardLayout.useCallback[handleDeleteEvent] ...dashboard-layout.tsx:87:27`.
+- **Root Cause:** The `handleDeleteEvent` function in `DashboardLayout` was correctly passed to `FocusEventDetailsSidebar`, but the sidebar's delete button only called it with the `eventId`, while the API expected both `eventId` and `calendarId`.
+- **Fix Applied:**
+    - Modified `handleDeleteEvent` in `DashboardLayout` to accept `calendarId` (defaulting to 'primary') and include it in the API request body.
+    - Updated the `onDelete` prop interface in `FocusEventDetailsSidebar` to accept `calendarId`.
+    - Modified the `handleDeleteClick` function in `FocusEventDetailsSidebar` to call `onDelete` with both the event `id` and the string `'primary'` as the `calendarId`.
+- **Next Step:** Re-test the "Delete Focus Time" functionality. 

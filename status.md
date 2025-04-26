@@ -61,7 +61,8 @@
     *   [ ] Set up environment variables in Vercel
     *   [ ] Deploy project & test thoroughly
 *   [Pending] **Step 9: Bug Fixing / Known Issues**
-    *   [ ] Address Supabase SSR cookie handling linter errors (See `errors.md`)
+    *   [x] **FIXED:** Address `delete-focus-time` API errors (Incorrect table query `user_connections` -> `google_tokens`, Incorrect cookie handling).
+    *   [ ] Address Supabase SSR cookie handling linter errors (See `errors.md`) - *Note: The previous fix in delete route might resolve some of these if pattern is repeated.* 
 
 *Note: Update status markers ([ ], [In Progress], [x]) as development proceeds.*
 
@@ -115,3 +116,25 @@ calmhour-landing/
 ```
 
 *Note: Structure simplified for clarity. Landing page components omitted.* 
+
+## Current Status (as of last interaction)
+
+- **Implemented:** Frontend Event Coloring based on Google Calendar `colorId`
+  - Updated `/api/calendar/events` to fetch and return `colorId`.
+  - Updated `components/full-calendar-view.tsx`:
+    - Modified event interfaces (`ApiCalendarEvent`, `FullCalendarEvent`, `MappedEvent`) to include `colorId`.
+    - Stored fetched `colorId` in `extendedProps`.
+    - Updated `renderEventContent` and `getEventClassNames` to map Google `colorId` values to Tailwind text/background/border classes, providing visual priority indication.
+- **Implemented:** Priority Colors & Default Naming for Manual Focus Blocks (API-side)
+  - Updated `/api/calendar/add-focus-time` (uses default name, maps priority to `colorId`).
+- **Implemented:** Event Click to Show Details Sidebar
+  - Created `components/focus-event-details-sidebar.tsx`.
+  - Updated `components/dashboard-layout.tsx` (state, handlers, conditional render).
+  - Updated `components/full-calendar-view.tsx` (accepts `onEventClick`).
+- **Implemented:** Basic structure for `FocusEventDetailsSidebar`.
+- **Implemented:** Logic in `DashboardLayout` to only trigger details view for focus events.
+- **TODO:** Refine `FocusEventDetailsSidebar` UI/content.
+- **TODO:** Add actions to `FocusEventDetailsSidebar` (Edit, Delete).
+- **TODO:** Thoroughly test manual event creation, priority colors (in-app and GCal), and click interaction.
+- **Completed:** Refactor `delete-focus-time` API route to correctly handle Supabase cookies.
+- **Status:** Completed, but revealed potential dependency/type definition issues.
