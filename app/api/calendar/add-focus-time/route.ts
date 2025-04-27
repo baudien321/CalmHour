@@ -407,6 +407,12 @@ export async function POST(request: NextRequest) {
             // timeZone: userTimeZone,
         },
         colorId: eventColorId, 
+        // ** ADD extendedProperties to mark as CalmHour block **
+        extendedProperties: {
+          private: {
+            "calmhourFocusBlock": "true"
+          }
+        },
         // Optional: Add reminders, etc.
         reminders: {
             useDefault: false,

@@ -171,3 +171,11 @@ Create a landing page and a web application (CalmHour) that allows users to conn
     - Updated the `onDelete` prop interface in `FocusEventDetailsSidebar` to accept `calendarId`.
     - Modified the `handleDeleteClick` function in `FocusEventDetailsSidebar` to call `onDelete` with both the event `id` and the string `'primary'` as the `calendarId`.
 - **Next Step:** Re-test the "Delete Focus Time" functionality. 
+
+### `lib/supabase/server.ts`
+- Exports an async `createClient` function for server-side Supabase operations.
+- Uses `createServerClient` from `@supabase/ssr`.
+- Integrates with `next/headers` `cookies()` for server-side session management.
+- Reads Supabase URL and anon key from environment variables.
+
+- **`lib/supabase/client.ts`**: Defines a function `createClient` using `createBrowserClient` from `@supabase/ssr` to create a Supabase client instance for the browser environment. It utilizes `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` environment variables for configuration. 

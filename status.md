@@ -56,13 +56,40 @@
     *   [To Do] **Header Functionality:**
         *   [ ] Implement "Sync Now" button functionality.
         *   [ ] Implement "Settings" page/modal and link button.
+    *   [x] **Event Editing Functionality:** (NEW)
+        *   [x] API: Create `PATCH /api/calendar/update-focus-time` route.
+        *   [x] UI (Details Sidebar): Add "Edit Block" button.
+        *   [x] UI (Dashboard Layout): Add state (`editingEventDetails`) to manage edit mode.
+        *   [x] UI (Dashboard Layout): Implement `handleUpdateEvent` function.
+        *   [x] UI (Dashboard Layout): Implement logic to conditionally render sidebar for editing.
+        *   [x] UI (Controls Sidebar): Modify to accept `initialEventData`, `isEditing`, `onCancelEdit`, `onUpdate`, `isLoading` props.
+        *   [x] UI (Controls Sidebar): Implement form pre-filling based on `initialEventData`.
+        *   [x] UI (Controls Sidebar): Add "Cancel" button for edit mode.
+        *   [x] UI (Controls Sidebar): Modify form submission to call update/add handlers based on mode.
+        *   [x] UI (Controls Sidebar): Implement smart default for start time (next hour).
+        *   [x] UI (Controls Sidebar): Update start time label and rely on native input for AM/PM.
+        *   [x] UI (Controls Sidebar): Implement custom AM/PM time picker UI (Selects + RadioGroup).
 *   [Pending] **Step 8: Deployment**
     *   [ ] Configure Custom SMTP for reliable email confirmation
     *   [ ] Set up environment variables in Vercel
     *   [ ] Deploy project & test thoroughly
 *   [Pending] **Step 9: Bug Fixing / Known Issues**
     *   [x] **FIXED:** Address `delete-focus-time` API errors (Incorrect table query `user_connections` -> `google_tokens`, Incorrect cookie handling).
-    *   [ ] Address Supabase SSR cookie handling linter errors (See `errors.md`) - *Note: The previous fix in delete route might resolve some of these if pattern is repeated.* 
+    *   [ ] Address Supabase SSR cookie handling linter errors (See `errors.md`) - *Note: The previous fix in delete route might resolve some of these if pattern is repeated.*
+    *   [x] **FIXED:** Inability to edit/delete some focus blocks due to unreliable identification (title check). Replaced with robust `extendedProperties` check.
+    *   [x] **FIXED:** Event click logic only opened details for focus blocks. Now opens for all, with actions conditional.
+
+*   [To Do] **Step 10: Implement Calm Vibes Page** (NEW)
+    *   [x] **Page Structure:** Set up `app/calm-vibes/page.tsx` with full-screen layout (relative positioning).
+    *   [x] **Background Layer:** Add a div for the background (image or video) with appropriate z-index.
+    *   [x] **Overlay Container:** Add a container div for controls on top of the background.
+    *   [x] **Timer Component:** Create `components/focus-timer.tsx` with HH:MM:SS display and state logic.
+    *   [x] **Timer Integration:** Position Timer component top-left on the page.
+    *   [x] **Player Component:** Create `components/lofi-player.tsx` with audio element, state (`isPlaying`), and UI (play/pause button, track title).
+    *   [x] **Player Integration:** Position Player component bottom-left on the page.
+    *   [x] **Fullscreen Component:** Create `components/fullscreen-toggle.tsx` using Fullscreen API and state.
+    *   [x] **Fullscreen Integration:** Position Fullscreen component top-right on the page.
+    *   [x] **Styling:** Apply Tailwind CSS for layout, positioning, colors, blur, etc., to match design.
 
 *Note: Update status markers ([ ], [In Progress], [x]) as development proceeds.*
 
@@ -136,5 +163,4 @@ calmhour-landing/
 - **TODO:** Refine `FocusEventDetailsSidebar` UI/content.
 - **TODO:** Add actions to `FocusEventDetailsSidebar` (Edit, Delete).
 - **TODO:** Thoroughly test manual event creation, priority colors (in-app and GCal), and click interaction.
-- **Completed:** Refactor `delete-focus-time` API route to correctly handle Supabase cookies.
-- **Status:** Completed, but revealed potential dependency/type definition issues.
+- **Completed:** Refactor `delete-focus-time`

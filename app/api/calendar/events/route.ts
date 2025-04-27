@@ -12,6 +12,12 @@ interface CalendarEvent {
   start?: { dateTime?: string | null; date?: string | null; timeZone?: string | null } | null;
   end?: { dateTime?: string | null; date?: string | null; timeZone?: string | null } | null;
   colorId?: string | null;
+  extendedProperties?: { private?: { [key: string]: string } };
+}
+
+// Define the response event type including our new flag
+interface ResponseEvent extends Omit<CalendarEvent, 'extendedProperties'> { 
+  isFocusBlock: boolean;
 }
 
 export async function GET(request: NextRequest) {
@@ -126,41 +132,43 @@ export async function GET(request: NextRequest) {
     // 4. Fetch calendar events
     console.log(`[API /calendar/events] Fetching events for ${userId} from ${timeMin} to ${timeMax}`); // Use stored userId
     
-    let fetchedEvents: CalendarEvent[] = [];
+    let fetchedEvents: ResponseEvent[] = [];
     try {
         const response = await calendar.events.list({
             calendarId: 'primary',
             timeMin: timeMin,
             timeMax: timeMax,
-            singleEvents: true, // Expand recurring events into single instances
+            singleEvents: true,
             orderBy: 'startTime',
-            maxResults: 250, // Limit results to avoid excessive data
-            fields: 'items(id,summary,start,end,colorId)' // Specify fields including colorId
+            maxResults: 250,
+            fields: 'items(id,summary,start,end,colorId,extendedProperties)'
         });
 
         if (response.data.items) {
-            fetchedEvents = response.data.items.map(event => ({
+            fetchedEvents = response.data.items.map((event): ResponseEvent => {
+                const isFocus = event.extendedProperties?.private?.calmhourFocusBlock === 'true';
+                return {
                 id: event.id!,
                 summary: event.summary,
                 start: event.start,
                 end: event.end,
-                colorId: event.colorId // Include colorId in the mapped object
-            }));
+                   colorId: event.colorId,
+                   isFocusBlock: isFocus
+                }
+            });
             console.log(`[API /calendar/events] Found ${fetchedEvents.length} events.`);
         }
-    } catch (apiError: any) { // Catch specific error type
+    } catch (apiError: any) {
          console.error('[API /calendar/events] Google Calendar API error:', apiError);
          let errorMessage = 'Failed to fetch calendar events from Google.';
-         // Check for specific Google error structure
          if (apiError.response?.data?.error?.message) { 
              errorMessage = `Google API Error: ${apiError.response.data.error.message}`;
          } else if (apiError.message) {
             errorMessage = apiError.message;
          }
-         // Check for common error codes
          const statusCode = apiError.code || apiError.response?.status || 500;
          if (statusCode === 401) {
-             await supabase.from('google_tokens').delete().eq('user_id', userId); // Clean up bad token
+             await supabase.from('google_tokens').delete().eq('user_id', userId);
              return NextResponse.json({ error: 'Authentication failed with Google Calendar. Please reconnect.' }, { status: 401 });
          }
           if (statusCode === 403) {

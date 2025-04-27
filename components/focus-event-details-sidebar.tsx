@@ -1,7 +1,10 @@
+'use client'; // Ensure this component is a Client Component
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, Clock, Calendar as CalendarIcon, Trash2 } from "lucide-react"; // Using CalendarIcon alias
+import { ArrowLeft, Clock, Calendar as CalendarIcon, Trash2, Pencil, Music } from "lucide-react"; // Using CalendarIcon alias
 import { format } from 'date-fns';
+import { useRouter } from 'next/navigation'; // Import useRouter
 
 // Define a basic structure for event details we expect
 interface EventDetails {
@@ -16,6 +19,8 @@ interface FocusEventDetailsSidebarProps {
   eventDetails: EventDetails;
   onClose: () => void; // Function to call when closing the details view
   onDelete: (eventId: string, calendarId: string) => void; // Expect calendarId too
+  onEdit: () => void; // Add onEdit callback (no args needed, parent knows the event)
+  isFocusBlock: boolean; // Add prop to indicate if the event is a focus block
 }
 
 // Helper to format date/time range
@@ -44,7 +49,8 @@ const calculateDuration = (start: Date | null, end: Date | null): string => {
     return durationStr || '0m';
 }
 
-export function FocusEventDetailsSidebar({ eventDetails, onClose, onDelete }: FocusEventDetailsSidebarProps) {
+export function FocusEventDetailsSidebar({ eventDetails, onClose, onDelete, onEdit, isFocusBlock }: FocusEventDetailsSidebarProps) {
+  const router = useRouter(); // Initialize router
   const { id, title, start, end } = eventDetails; // Destructure id
 
   const formattedDateTime = formatDateTimeRange(start, end);
@@ -53,6 +59,12 @@ export function FocusEventDetailsSidebar({ eventDetails, onClose, onDelete }: Fo
   const handleDeleteClick = () => {
     // Pass the event ID and the calendar ID ('primary')
     onDelete(id, 'primary'); 
+  };
+
+  // Use router for navigation
+  const handleCalmVibesClick = () => {
+    console.log("Navigating to /calm-vibes...");
+    router.push('/calm-vibes');
   };
 
   return (
@@ -85,15 +97,26 @@ export function FocusEventDetailsSidebar({ eventDetails, onClose, onDelete }: Fo
            */}
         </div>
 
-        {/* Placeholder for future actions */}
+        {/* Always show Delete, Edit is conditional */}
         <div className="mt-auto pt-4 space-y-2">
-           {/* 
-           <Button variant="outline" className="w-full">Edit Block</Button>
-           <Button variant="destructive" className="w-full">Delete Block</Button> 
-           */}
+           {isFocusBlock && (
+              <>
+                {/* Add Calm Vibes Button Here */}
+                <Button variant="outline" className="w-full" onClick={handleCalmVibesClick}>
+                  <Music className="mr-2 h-4 w-4" /> 
+                  Calm Vibes
+                </Button>
+                
+                <Button variant="outline" className="w-full" onClick={onEdit}> 
+                   <Pencil className="mr-2 h-4 w-4" />
+                   Edit Block
+                </Button> 
+              </>
+           )}
            <Button variant="destructive" className="w-full" onClick={handleDeleteClick}> 
              <Trash2 className="mr-2 h-4 w-4" />
-             Delete Block
+             {/* Adjust label slightly if needed, but keeping generic is fine */}
+             Delete Event
            </Button> 
            <Button variant="outline" className="w-full" onClick={onClose}>Close Details</Button>
         </div>

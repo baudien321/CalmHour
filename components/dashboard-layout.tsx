@@ -24,41 +24,121 @@ interface DashboardLayoutProps {
   userEmail: string | undefined; 
 }
 
-interface SelectedEventDetails {
+interface EventDetailsForEdit {
   id: string;
   title: string;
   start: Date | null;
   end: Date | null;
 }
 
+// ** NEW Interface for selected event details including focus status **
+interface SelectedEventDetails extends EventDetailsForEdit {
+  isFocusBlock: boolean;
+}
+
 export function DashboardLayout({ isCalendarConnected, userEmail }: DashboardLayoutProps) {
   const [calendarKey, setCalendarKey] = useState(0);
+  // ** Update state to use the new interface **
   const [selectedEvent, setSelectedEvent] = useState<SelectedEventDetails | null>(null);
   const [isDeletingEvent, setIsDeletingEvent] = useState(false);
+  const [isUpdatingEvent, setIsUpdatingEvent] = useState(false);
+  // Keep editingEventDetails using the simpler interface for now
+  const [editingEventDetails, setEditingEventDetails] = useState<EventDetailsForEdit | null>(null);
 
   const triggerCalendarRefresh = useCallback(() => {
     console.log('[DashboardLayout] Triggering calendar refresh...');
     setCalendarKey(prevKey => prevKey + 1);
     setSelectedEvent(null);
+    setEditingEventDetails(null);
   }, []);
 
   const handleEventClick = useCallback((clickInfo: EventClickArg) => {
-    if (clickInfo.event.extendedProps.isFocusTime) {
-        console.log('[DashboardLayout] Focus Time event clicked:', clickInfo.event);
-        setSelectedEvent({
-            title: clickInfo.event.title,
-            start: clickInfo.event.start,
-            end: clickInfo.event.end,
-            id: clickInfo.event.id,
-        });
-    } else {
-        console.log('[DashboardLayout] Non-focus event clicked, ignoring for details view:', clickInfo.event.title);
-    }
+    setEditingEventDetails(null); // Clear edit mode if active
+
+    // Determine if it's a focus block (check isFocusBlock from extendedProps)
+    const isFocus = !!clickInfo.event.extendedProps.isFocusBlock;
+    
+    console.log(`[DashboardLayout] Event clicked (isFocus: ${isFocus}):`, clickInfo.event.title);
+
+    // ** Always set the selected event, including the focus status **
+    setSelectedEvent({
+        title: clickInfo.event.title,
+        start: clickInfo.event.start,
+        end: clickInfo.event.end,
+        id: clickInfo.event.id,
+        isFocusBlock: isFocus 
+    });
+
   }, []);
 
   const handleCloseDetails = useCallback(() => {
       setSelectedEvent(null);
   }, []);
+
+  const handleEditEvent = useCallback(() => {
+    // ** Only allow editing if the selected event is a focus block **
+    if (selectedEvent && selectedEvent.isFocusBlock) {
+      console.log('[DashboardLayout] Switching to edit mode for event:', selectedEvent.id);
+      // Pass only the necessary details for editing
+      setEditingEventDetails({
+         id: selectedEvent.id,
+         title: selectedEvent.title,
+         start: selectedEvent.start,
+         end: selectedEvent.end,
+      });
+      setSelectedEvent(null); // Close the details view
+    } else {
+      console.warn('[DashboardLayout] Attempted to edit a non-focus block or no event selected.');
+    }
+  }, [selectedEvent]);
+
+  const handleCancelEdit = useCallback(() => {
+    console.log('[DashboardLayout] Cancelling edit mode.');
+    setEditingEventDetails(null);
+  }, []);
+
+  const handleUpdateEvent = useCallback(async (formData: any) => {
+    if (!editingEventDetails) return;
+
+    setIsUpdatingEvent(true);
+    const eventId = editingEventDetails.id;
+    console.log(`[DashboardLayout] Attempting to update event: ${eventId} with data:`, formData);
+    const toastId = toast.loading("Updating focus block...");
+
+    try {
+      const payload = {
+        eventId: eventId,
+        startTime: formData.dateTime.toISOString(),
+        duration: formData.duration,
+        sessionName: formData.sessionName,
+        priority: formData.priority,
+      };
+
+      const response = await fetch('/api/calendar/update-focus-time', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+          throw new Error(result.error || `HTTP error! status: ${response.status}`);
+      }
+
+      toast.success("Focus block updated successfully!", { id: toastId });
+      triggerCalendarRefresh();
+
+    } catch (error: any) {
+        console.error("[DashboardLayout] Failed to update event:", error);
+        toast.error("Failed to update focus block", { 
+            id: toastId,
+            description: error.message || "An unknown error occurred.",
+        });
+    } finally {
+        setIsUpdatingEvent(false);
+    }
+  }, [editingEventDetails, triggerCalendarRefresh]);
 
   const handleDeleteEvent = useCallback(async (eventId: string, calendarId: string = 'primary') => {
       if (!window.confirm("Are you sure you want to delete this focus block?")) {
@@ -148,14 +228,28 @@ export function DashboardLayout({ isCalendarConnected, userEmail }: DashboardLay
         </main>
         
         <aside className="w-full shrink-0 md:w-80 lg:w-96">
-           {selectedEvent ? (
-             <FocusEventDetailsSidebar 
-               eventDetails={selectedEvent} 
-               onClose={handleCloseDetails} 
-               onDelete={handleDeleteEvent}
-             />
-           ) : (
-             <FocusControlsSidebar onEventAdded={triggerCalendarRefresh} /> 
+           {editingEventDetails ? (
+              <FocusControlsSidebar 
+                 key={`edit-${editingEventDetails.id}`}
+                 isEditing={true} 
+                 initialEventData={editingEventDetails}
+                 onUpdate={handleUpdateEvent}
+                 onCancelEdit={handleCancelEdit}
+                 isLoading={isUpdatingEvent}
+              />
+            ) : selectedEvent ? (
+              <FocusEventDetailsSidebar 
+                eventDetails={selectedEvent} 
+                onClose={handleCloseDetails} 
+                onDelete={handleDeleteEvent}
+                onEdit={handleEditEvent}
+                // ** Pass the isFocusBlock status **
+                isFocusBlock={selectedEvent.isFocusBlock}
+              />
+            ) : (
+              <FocusControlsSidebar 
+                 onEventAdded={triggerCalendarRefresh} 
+             /> 
            )}
         </aside>
       </div>

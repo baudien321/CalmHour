@@ -18,6 +18,7 @@ interface ApiCalendarEvent {
   start?: { dateTime?: string | null; date?: string | null; timeZone?: string | null } | null;
   end?: { dateTime?: string | null; date?: string | null; timeZone?: string | null } | null;
   colorId?: string | null; // Add colorId here
+  isFocusBlock: boolean;
 }
 
 // FullCalendar event format
@@ -28,8 +29,8 @@ interface FullCalendarEvent {
   end: string;
   allDay: boolean;
   extendedProps: {
-    isFocusTime?: boolean; // Flag to identify focus time events
-    colorId?: string | null; // Add colorId here as well
+    isFocusBlock?: boolean;
+    colorId?: string | null;
   };
 }
 
@@ -38,8 +39,8 @@ type MappedEvent = Omit<FullCalendarEvent, 'start' | 'end' | 'extendedProps'> & 
     start: string | null | undefined; 
     end: string | null | undefined; 
     extendedProps: {
-        isFocusTime?: boolean;
-        colorId?: string | null; // Add colorId here
+        isFocusBlock?: boolean;
+        colorId?: string | null;
     };
 };
 
@@ -102,8 +103,6 @@ export function FullCalendarView({ onEventClick }: FullCalendarViewProps) {
         
         // Transform API events to FullCalendar format
         const potentiallyIncompleteEvents: MappedEvent[] = (data.events || []).map(apiEvent => {
-            // Determine if it's focus time based on summary
-            const isFocus = apiEvent.summary?.toLowerCase().includes('focus time') ?? false;
             return {
                 id: apiEvent.id,
                 title: apiEvent.summary || undefined,
@@ -111,8 +110,8 @@ export function FullCalendarView({ onEventClick }: FullCalendarViewProps) {
                 end: apiEvent.end?.dateTime || apiEvent.end?.date,
                 allDay: !!apiEvent.start?.date,
                 extendedProps: { 
-                    isFocusTime: isFocus,
-                    colorId: apiEvent.colorId // Store colorId in extendedProps
+                    isFocusBlock: apiEvent.isFocusBlock,
+                    colorId: apiEvent.colorId
                 },
             };
         });
@@ -249,7 +248,7 @@ export function FullCalendarView({ onEventClick }: FullCalendarViewProps) {
 
   // Render custom event content (Icon + Title)
   const renderEventContent = (eventInfo: any /* FullCalendar EventContentArg */) => {
-    const isFocus = eventInfo.event.extendedProps.isFocusTime;
+    const isFocus = eventInfo.event.extendedProps.isFocusBlock;
     const colorId = eventInfo.event.extendedProps.colorId;
 
     // --- Determine colors based on colorId (fallback to old logic if no colorId) ---
@@ -297,7 +296,7 @@ export function FullCalendarView({ onEventClick }: FullCalendarViewProps) {
 
   // Apply event class names for background/border styling
   const getEventClassNames = (arg: any /* FullCalendar EventClassNamesArg */) => {
-      const isFocus = arg.event.extendedProps.isFocusTime;
+      const isFocus = arg.event.extendedProps.isFocusBlock;
       const colorId = arg.event.extendedProps.colorId;
       const baseClasses = "rounded shadow-sm border-l-4 p-0.5"; // Keep base classes
 

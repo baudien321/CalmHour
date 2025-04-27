@@ -155,3 +155,34 @@
    // border: none; 
 }
 */
+
+/* Add custom marquee animation */
+@layer utilities {
+  @keyframes marquee {
+    0% { transform: translateX(0%); }
+    /* Pause at start */
+    10% { transform: translateX(0%); }
+    /* Scroll left */
+    90% { transform: translateX(calc(-100% + /* viewport width approximation - adjust as needed */ 200px)); } 
+    /* Pause at end */
+    100% { transform: translateX(calc(-100% + /* viewport width approximation - adjust as needed */ 200px)); }
+  }
+
+  /* Alternative simpler scroll */
+  @keyframes marquee-simple {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
+  }
+
+  /* New continuous marquee animation */
+  @keyframes marquee-continuous {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); } /* Move half the width (assuming content is doubled) */
+  }
+
+  /* Apply animation - maybe conditionally needed */
+  /* We'll apply this directly in the component for now */
+  /* .animate-marquee {
+    animation: marquee 15s linear infinite;
+  } */
+}

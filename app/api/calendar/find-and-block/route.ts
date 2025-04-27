@@ -1,35 +1,21 @@
 import { google } from 'googleapis';
-import { createServerClient, type CookieMethods, type CookieOptions } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
-  const cookieStore = cookies();
-
-  const cookieMethods: CookieMethods = {
-    get: (name: string) => {
-      return cookieStore.get(name)?.value;
-    },
-    set: (name: string, value: string, options: CookieOptions) => {
-      try {
-        cookieStore.set({ name, value, ...options });
-      } catch (error) {
-        console.warn(`Warning: Failed to set cookie '${name}':`, error);
-      }
-    },
-    remove: (name: string, options: CookieOptions) => {
-      try {
-        cookieStore.set({ name, value: '', ...options });
-      } catch (error) {
-        console.warn(`Warning: Failed to remove cookie '${name}':`, error);
-      }
-    },
-  };
+  const cookieStore = await cookies();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: cookieMethods }
+    {
+      cookies: {
+        get: (name: string) => cookieStore.get(name)?.value,
+        set: (name: string, value: string, options: CookieOptions) => { try { cookieStore.set({ name, value, ...options }); } catch (error) { /* Ignore */ } },
+        remove: (name: string, options: CookieOptions) => { try { cookieStore.set({ name, value: '', ...options }); } catch (error) { /* Ignore */ } },
+      },
+    }
   );
 
   try {
@@ -224,6 +210,11 @@ export async function POST(request: Request) {
             },
             // You can set a specific color via colorId (1-11)
             // colorId: '2' // Example: Green
+            extendedProperties: {
+              private: {
+                "calmhourFocusBlock": "true"
+              }
+            },
           };
 
           const createdEvent = await calendar.events.insert({
