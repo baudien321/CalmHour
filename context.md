@@ -179,3 +179,6 @@ Create a landing page and a web application (CalmHour) that allows users to conn
 - Reads Supabase URL and anon key from environment variables.
 
 - **`lib/supabase/client.ts`**: Defines a function `createClient` using `createBrowserClient` from `@supabase/ssr` to create a Supabase client instance for the browser environment. It utilizes `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` environment variables for configuration. 
+
+The focus branch has been merged into the main branch, and all changes have been pushed to the remote repository on GitHub. The main branch is now up-to-date. 
+- **Deployment Issue:** Encountered `ERR_PNPM_OUTDATED_LOCKFILE` on Vercel. Resolved by running `pnpm install --no-frozen-lockfile` to update `pnpm-lock.yaml` and committing the change. 

@@ -164,3 +164,6 @@ calmhour-landing/
 - **TODO:** Add actions to `FocusEventDetailsSidebar` (Edit, Delete).
 - **TODO:** Thoroughly test manual event creation, priority colors (in-app and GCal), and click interaction.
 - **Completed:** Refactor `delete-focus-time`
+
+Merged focus branch into main and pushed to GitHub.
+- **Action:** Updated `pnpm-lock.yaml` to resolve Vercel deployment error.

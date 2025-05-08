@@ -1,32 +1,5 @@
-Error: ./app/globals.css:113:3
-[31m[1mSyntax error[22m[39m: C:\Users\baudi\OneDrive\Desktop\CalmHour\calmhour-landing\app\globals.css The `bg-background` class does not exist. If `bg-background` is a custom class, make sure it is defined within a `@layer` directive.
-
- [90m 111 | [39m[90m/* Apply base body styles AFTER variables are defined */[39m
- [90m 112 | [39mbody [33m{[39m
-[1m[31m>[39m[22m[90m 113 | [39m  [36m@apply[39m bg-background text-foreground[33m;[39m 
- [90m     | [39m  [1m[31m^[39m[22m
- [90m 114 | [39m[33m}[39m
- [90m 115 | [39m
-    at BuildError (webpack-internal:///(pages-dir-browser)/./node_modules/next/dist/client/components/react-dev-overlay/ui/container/build-error.js:43:41)
-    at renderWithHooks (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom.development.js:15486:18)
-    at updateFunctionComponent (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom.development.js:19612:20)
-    at beginWork (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom.development.js:21635:16)
-    at beginWork$1 (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom.development.js:27460:14)
-    at performUnitOfWork (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom.development.js:26591:12)
-    at workLoopSync (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom.development.js:26500:5)
-    at renderRootSync (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom.development.js:26468:7)
-    at performConcurrentWorkOnRoot (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom.development.js:25772:74)
-    at workLoop (webpack-internal:///(pages-dir-browser)/./node_modules/scheduler/cjs/scheduler.development.js:266:34)
-    at flushWork (webpack-internal:///(pages-dir-browser)/./node_modules/scheduler/cjs/scheduler.development.js:239:14)
-    at MessagePort.performWorkUntilDeadline (webpack-internal:///(pages-dir-browser)/./node_modules/scheduler/cjs/scheduler.development.js:533:21)
-   
-/app/globals.css (113:3)
-
-Syntax error: C:\Users\baudi\OneDrive\Desktop\CalmHour\calmhour-landing\app\globals.css The `bg-background` class does not exist. If `bg-background` is a custom class, make sure it is defined within a `@layer` directive.
-
-  111 | /* Apply base body styles AFTER variables are defined */
-  112 | body {
-> 113 |   @apply bg-background text-foreground; 
-      |   ^
-  114 | }
-  115 | 
+ERR_PNPM_OUTDATED_LOCKFILE  Cannot install with "frozen-lockfile" because pnpm-lock.yaml is not up to date with <ROOT>/package.json
+Note that in CI environments this setting is true by default. If you still need to run install in such cases, use "pnpm install --no-frozen-lockfile"
+  Failure reason:
+  specifiers in the lockfile ({"@emotion/is-prop-valid":"latest","@fullcalendar/core":"^6.1.17","@fullcalendar/daygrid":"^6.1.17","@fullcalendar/react":"^6.1.17","@fullcalendar/timegrid":"^6.1.17","@hookform/resolvers":"^3.9.1","@radix-ui/react-accordion":"^1.2.2","@radix-ui/react-alert-dialog":"^1.1.4","@radix-ui/react-aspect-ratio":"^1.1.1","@radix-ui/react-avatar":"^1.1.2","@radix-ui/react-checkbox":"^1.1.3","@radix-ui/react-collapsible":"^1.1.2","@radix-ui/react-context-menu":"^2.2.4","@radix-ui/react-dialog":"^1.1.4","@radix-ui/react-dropdown-menu":"^2.1.4","@radix-ui/react-hover-card":"^1.1.4","@radix-ui/react-label":"^2.1.1","@radix-ui/react-menubar":"^1.1.4","@radix-ui/react-navigation-menu":"^1.2.3","@radix-ui/react-popover":"^1.1.4","@radix-ui/react-progress":"^1.1.1","@radix-ui/react-radio-group":"^1.2.4","@radix-ui/react-scroll-area":"^1.2.2","@radix-ui/react-select":"^2.1.4","@radix-ui/react-separator":"^1.1.1","@radix-ui/react-slider":"^1.2.4","@radix-ui/react-slot":"^1.1.1","@radix-ui/react-switch":"^1.1.4","@radix-ui/react-tabs":"^1.1.2","@radix-ui/react-toast":"^1.2.4","@radix-ui/react-toggle":"^1.1.1","@radix-ui/react-toggle-group":"^1.1.1","@radix-ui/react-tooltip":"^1.1.6","@supabase/supabase-js":"^2.49.4","@tanstack/react-virtual":"^3.0.0-beta.68","class-variance-authority":"^0.7.1","clsx":"^2.1.1","cmdk":"1.0.4","date-fns":"^3.6.0","date-fns-tz":"^3.2.0","dotenv":"^16.4.7","embla-carousel-react":"8.5.1","framer-motion":"latest","googleapis":"^148.0.0","input-otp":"1.4.1","lucide-react":"^0.454.0","next":"15.2.4","next-themes":"^0.4.4","react":"^18.3.1","react-day-picker":"8.10.1","react-dom":"^18.3.1","react-hook-form":"^7.54.1","react-icons":"^5.5.0","react-resizable-panels":"^2.1.7","recharts":"2.15.0","sonner":"^1.7.1","tailwind-merge":"^2.5.5","tailwindcss-animate":"^1.0.7","vaul":"^0.9.6","zod":"^3.24.1","@tailwindcss/postcss":"^4.1.3","@types/node":"^22.14.0","@types/react":"^18.3.20","@types/react-dom":"^18.3.6","autoprefixer":"^10.4.21","postcss":"^8.5.3","tailwindcss":"^3.4.17","typescript":"^5"}) don't match specs in package.json ({"@tailwindcss/postcss":"^4.1.3","@types/node":"^22.15.2","@types/react":"^18.3.20","@types/react-dom":"^18.3.6","autoprefixer":"^10.4.21","postcss":"^8.5.3","tailwindcss":"^3.4.17","typescript":"^5","@emotion/is-prop-valid":"latest","@fullcalendar/core":"^6.1.17","@fullcalendar/daygrid":"^6.1.17","@fullcalendar/react":"^6.1.17","@fullcalendar/timegrid":"^6.1.17","@hookform/resolvers":"^3.9.1","@radix-ui/react-accordion":"^1.2.2","@radix-ui/react-alert-dialog":"^1.1.4","@radix-ui/react-aspect-ratio":"^1.1.1","@radix-ui/react-avatar":"^1.1.2","@radix-ui/react-checkbox":"^1.1.3","@radix-ui/react-collapsible":"^1.1.2","@radix-ui/react-context-menu":"^2.2.4","@radix-ui/react-dialog":"^1.1.4","@radix-ui/react-dropdown-menu":"^2.1.4","@radix-ui/react-hover-card":"^1.1.4","@radix-ui/react-label":"^2.1.1","@radix-ui/react-menubar":"^1.1.4","@radix-ui/react-navigation-menu":"^1.2.3","@radix-ui/react-popover":"^1.1.4","@radix-ui/react-progress":"^1.1.1","@radix-ui/react-radio-group":"^1.2.4","@radix-ui/react-scroll-area":"^1.2.2","@radix-ui/react-select":"^2.1.4","@radix-ui/react-separator":"^1.1.1","@radix-ui/react-slider":"^1.2.4","@radix-ui/react-slot":"^1.1.1","@radix-ui/react-switch":"^1.1.4","@radix-ui/react-tabs":"^1.1.2","@radix-ui/react-toast":"^1.2.4","@radix-ui/react-toggle":"^1.1.1","@radix-ui/react-toggle-group":"^1.1.1","@radix-ui/react-tooltip":"^1.1.6","@supabase/supabase-js":"^2.49.4","@tanstack/react-virtual":"^3.0.0-beta.68","class-variance-authority":"^0.7.1","clsx":"^2.1.1","cmdk":"1.0.4","date-fns":"^3.6.0","date-fns-tz":"^3.2.0","dotenv":"^16.4.7","embla-carousel-react":"8.5.1","framer-motion":"latest","googleapis":"^148.0.0","input-otp":"1.4.1","lucide-react":"^0.454.0","next":"15.2.4","next-themes":"^0.4.4","react":"^18.3.1","react-day-picker":"8.10.1","react-dom":"^18.3.1","react-hook-form":"^7.54.1","react-icons":"^5.5.0","react-resizable-panels":"^2.1.7","recharts":"2.15.0","sonner":"^1.7.1","tailwind-merge":"^2.5.5","tailwindcss-animate":"^1.0.
+Error: Command "pnpm install" exited with 1
