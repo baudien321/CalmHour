@@ -182,3 +182,4 @@ Create a landing page and a web application (CalmHour) that allows users to conn
 
 The focus branch has been merged into the main branch, and all changes have been pushed to the remote repository on GitHub. The main branch is now up-to-date. 
 - **Deployment Issue:** Encountered `ERR_PNPM_OUTDATED_LOCKFILE` on Vercel. Resolved by running `pnpm install --no-frozen-lockfile` to update `pnpm-lock.yaml` and committing the change. 
+- **Deployment Issue:** Encountered "Module not found: Can't resolve '@supabase/ssr'" on Vercel. Resolved by running `pnpm add @supabase/ssr` and committing the change. 

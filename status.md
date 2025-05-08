@@ -167,3 +167,4 @@ calmhour-landing/
 
 Merged focus branch into main and pushed to GitHub.
 - **Action:** Updated `pnpm-lock.yaml` to resolve Vercel deployment error.
+- **Action:** Installed `@supabase/ssr` package to resolve Vercel deployment error ("Module not found").
