@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from 'next/server';
 import { redirect } from 'next/navigation';
+import { getSiteUrl } from '@/lib/config';
 
 export async function GET(request: Request) {
   // 1. Get Supabase client and check for authenticated user
@@ -23,8 +24,7 @@ export async function GET(request: Request) {
   }
 
   // 3. Determine the callback URL for *this* flow
-  //    For now, hardcode localhost. Use environment variable for production.
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const siteUrl = getSiteUrl(request);
   const redirectUri = `${siteUrl}/api/auth/google/calendar/callback`;
 
   // 4. Define required scopes

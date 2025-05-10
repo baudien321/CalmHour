@@ -168,3 +168,34 @@ calmhour-landing/
 Merged focus branch into main and pushed to GitHub.
 - **Action:** Updated `pnpm-lock.yaml` to resolve Vercel deployment error.
 - **Action:** Installed `@supabase/ssr` package to resolve Vercel deployment error ("Module not found").
+
+## Status Update - User facing Vercel deployment issues
+
+**Issue:** Deployment to Vercel is failing.
+**File with errors:** `bugs.md`
+**Identified Root Cause:** The build process on Vercel is failing because the Supabase client is missing the required `SUPABASE_URL` and `SUPABASE_ANON_KEY` environment variables.
+
+**Current Action:** Guided the user on how to add these environment variables to their Vercel project settings.
+
+**Next Steps:**
+- User to add Supabase environment variables to Vercel.
+- User to attempt redeployment.
+- If deployment still fails, investigate further based on new error messages or symptoms.
+
+**UPDATE: Deployment Successful!**
+The user successfully added the Supabase environment variables to Vercel, and the deployment is now working.
+
+## CI/CD Discussion for Solo Developer on Vercel
+
+**Context:** User asked if they need to learn CI/CD and for best practices as a solo coder using Vercel.
+
+**Summary of Advice:**
+- Vercel's Git integration already provides a robust CI/CD pipeline (auto-builds, preview deployments, production deployments).
+- For a solo dev, deep learning of complex CI/CD tools (Jenkins, etc.) is often not necessary when using Vercel.
+- **Best Practices Leveraged/Recommended:**
+    - Continue using Vercel's Git integration.
+    - Commit and push regularly.
+    - Utilize feature branches and Vercel's preview deployments for testing.
+    - Manage environment variables directly in Vercel (as done for Supabase keys).
+    - Consider adding automated tests (Jest/Vitest) as the project grows for increased reliability.
+    - Keep the CI/CD process simple and let Vercel handle the automation to support a "vibecoding" workflow.

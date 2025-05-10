@@ -182,4 +182,29 @@ Create a landing page and a web application (CalmHour) that allows users to conn
 
 The focus branch has been merged into the main branch, and all changes have been pushed to the remote repository on GitHub. The main branch is now up-to-date. 
 - **Deployment Issue:** Encountered `ERR_PNPM_OUTDATED_LOCKFILE` on Vercel. Resolved by running `pnpm install --no-frozen-lockfile` to update `pnpm-lock.yaml` and committing the change. 
-- **Deployment Issue:** Encountered "Module not found: Can't resolve '@supabase/ssr'" on Vercel. Resolved by running `pnpm add @supabase/ssr` and committing the change. 
+- **Deployment Issue:** Encountered "Module not found: Can't resolve '@supabase/ssr'" on Vercel. Resolved by running `pnpm add @supabase/ssr` and committing the change.
+
+### Vercel Deployment Issue: Missing Supabase Environment Variables
+
+**Context:** The user is attempting to deploy their Next.js application, "calmhour", to Vercel.
+**Problem:** The deployment build is failing.
+**Error Log:** `bugs.md` indicates the error `Error: @supabase/ssr: Your project's URL and API key are required to create a Supabase client!`.
+**Analysis:** The application uses Supabase, and the necessary environment variables (`SUPABASE_URL` and `SUPABASE_ANON_KEY`) are not configured in the Vercel project settings, leading to the Supabase client failing to initialize during the build.
+**Resolution Suggested:** The user needs to add these environment variables to their Vercel project's settings and then redeploy. 
+
+**Outcome:** User added the environment variables, and the deployment to Vercel was **successful**.
+
+### CI/CD for Solo Developer on Vercel
+
+**Query:** User asked about the necessity of learning CI/CD and best practices for a solo developer on Vercel, particularly with a "vibecoding" style.
+**Key Points Provided:**
+- Vercel itself provides a strong, built-in CI/CD workflow when connected to a Git repository.
+  - Pushing to the main branch automatically deploys to production.
+  - Pushing to feature branches or creating Pull Requests generates preview deployments.
+- This largely obviates the need for a solo developer to set up complex external CI/CD systems (like Jenkins or manual GitHub Actions configurations for deployment).
+- **Recommended Practices:**
+  - **Utilize Git:** Commit frequently, use feature branches.
+  - **Leverage Vercel Previews:** Test changes extensively using Vercel's preview deployments before merging to main.
+  - **Environment Variable Management:** Continue managing secrets and configurations via Vercel's project settings.
+  - **Automated Testing (Future Consideration):** As the project matures, integrating automated tests (e.g., Jest/Vitest, which Vercel can run during its build process) will enhance stability.
+  - **Simplicity:** The primary goal for a solo developer is a CI/CD process that is automated, reliable, and stays out of the way, allowing focus on development. Vercel excels at this. 

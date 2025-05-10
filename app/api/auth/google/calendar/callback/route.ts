@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from 'next/server';
 import { redirect } from 'next/navigation';
+import { getSiteUrl } from '@/lib/config';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -45,8 +46,7 @@ export async function GET(request: Request) {
   }
 
   // 5. Determine the redirect URI used in the *initial* request (must match)
-  //    This needs to be consistent with the one sent in the /connect route
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const siteUrl = getSiteUrl(request);
   const redirectUri = `${siteUrl}/api/auth/google/calendar/callback`;
 
   try {
