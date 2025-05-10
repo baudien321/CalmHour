@@ -5,6 +5,9 @@ export const config = {
   isTest: process.env.NODE_ENV === 'test',
 } as const;
 
+console.log('[DEBUG] NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL)
+console.log('[DEBUG] NODE_ENV:', process.env.NODE_ENV)
+
 // Helper function to get the appropriate URL
 export function getSiteUrl(request?: Request): string {
   if (request) {
